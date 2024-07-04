@@ -1,0 +1,4 @@
+logs
+data
+lib/*pyc
+lib/__pycache__/
