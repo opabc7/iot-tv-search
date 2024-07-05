@@ -12,19 +12,20 @@ import json
 import pymysql.cursors
 import threading
 
-class vod:
-    def __init__(self, work_dir):
+class Vod:
+    def __init__(self, work_dir, task, _id_field, title_field):
         self.db_connections = {}
 
-        self.init_logger(os.path.join(work_dir, 'conf/logging.conf'))
-        self.init_config(os.path.join(work_dir, 'conf/config.ini'), os.path.join(work_dir, 'conf', task + '.ini'))
+        self._id_field, self.title_field = _id_field, title_field
+        self.init_logger(os.path.join(work_dir, 'conf', task, 'logging.ini'))
+        self.init_config(os.path.join(work_dir, 'conf/config.ini'), task, os.path.join(work_dir, 'conf', task, 'config.ini'))
 
     def init_logger(self, fpath):
         logging.config.fileConfig(fpath)
         self.logger = logging.getLogger()
         self.logger.info('logger created.')
 
-    def init_config(self, fpath, fpath_task):
+    def init_config(self, fpath, task, fpath_task):
         config = configparser.RawConfigParser()
         config.read(fpath)
         self.logger.info('config loaded.')
@@ -39,7 +40,6 @@ class vod:
 
         # config:mq
         self.mq_addr = config['mq']['mq_addr']
-        self.mq_consumer_id = config['mq']['mq_consumer']
 
         # config:task
         task_config = configparser.RawConfigParser()
@@ -52,30 +52,34 @@ class vod:
         self.doc_sql_update = task_config['db']['doc_sql_update']
 
         # config:task:mq
+        self.mq_consumer_id = task_config['mq']['mq_consumer']
         self.mq_topic = task_config['mq']['mq_topic']
 
     def handle_mq(self, msg):
         try:
-            _id, title, body = self.pre(msg)
+            _id, title, body = self.pre_mq_msg(msg)
 
-            self.write_db(id, title, body)
+            self.write_db(_id, title, body)
 
             self.write_es()
 
             self.logger.info('completed message - %s - %s', _id, title)
             return ConsumeStatus.CONSUME_SUCCESS
         except Exception as e:
-            self.logger.error('failed message - %s - %s', _id, title)
+            self.logger.error('failed message - %s', msg)
             self.logger.exception(e)
             return ConsumeStatus.RECONSUME_LATER
 
-    def pre(self, msg):
+    def pre_mq_msg(self, msg):
         body = msg.body.decode()
 
-        self.logger.info('received message - %s', body)
-        return None, None, body
+        body_json = json.loads(body)
+        _id, _title = body_json[self._id_field], body_json[self.title_field]
 
-    def write_db(self, id, title, body):
+        self.logger.info('received message - %s - %s', _id, _title)
+        return _id, _title, body
+
+    def write_db(self, _id, title, body):
         _thread = threading.get_ident()
 
         if _thread in self.db_connections:
@@ -90,23 +94,23 @@ class vod:
             self.db_connections[_thread] = db_connection
 
         with db_connection.cursor() as db_cursor:
-            for_update = db_cursor.execute(self.doc_sql_query, (id, ))
+            for_update = db_cursor.execute(self.doc_sql_query, (_id, ))
 
         _time = int(time.time() * 1000)
         with db_connection.cursor() as db_cursor:
             if for_update:
-                db_cursor.execute(self.doc_sql_update, (body, _time, id))
-                self.logger.info('db update - %s - %s', id, title)
+                db_cursor.execute(self.doc_sql_update, (body, _time, _id))
+                self.logger.info('db update - %s - %s', _id, title)
             else:
-                db_cursor.execute(self.doc_sql_insert, (id, body, _time))
-                self.logger.info('db insert - %s - %s', id, title)
+                db_cursor.execute(self.doc_sql_insert, (_id, body, _time))
+                self.logger.info('db insert - %s - %s', _id, title)
 
         db_connection.commit()
 
     def write_es(self):
         pass
 
-    def start(self, task):
+    def start(self):
         mq_consumer = PushConsumer(self.mq_consumer_id)
         mq_consumer.set_name_server_address(self.mq_addr)
         mq_consumer.subscribe(self.mq_topic, self.handle_mq)
@@ -118,3 +122,16 @@ class vod:
             time.sleep(30)
 
         mq_consumer.shutdown()
+
+class Album(Vod):
+    def __init__(self, work_dir):
+       Vod.__init__(self, work_dir, 'album', 'sid', 'title')
+
+class VirtualProgram(Vod):
+    def __init__(self, work_dir):
+       Vod.__init__(self, work_dir, 'virtual_program', 'virtualSid', 'title')
+
+class Person(Vod):
+    def __init__(self, work_dir):
+       Vod.__init__(self, work_dir, 'person', 'virtualSid', 'title')
+
