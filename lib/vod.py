@@ -133,5 +133,5 @@ class VirtualProgram(Vod):
 
 class Person(Vod):
     def __init__(self, work_dir):
-       Vod.__init__(self, work_dir, 'person', 'virtualSid', 'title')
+       Vod.__init__(self, work_dir, 'person', 'sid', 'title')
 
