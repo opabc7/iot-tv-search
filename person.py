@@ -9,4 +9,3 @@ if __name__ == '__main__':
 
     task = Person(os.path.dirname(__file__))
     task.start()
-

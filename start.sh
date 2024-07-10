@@ -1,5 +1,15 @@
 #!/bin/sh
 
+task=$1
+
+case "$task" in
+    album|person|virtual_program)
+        echo "task:    ${task}"
+    ;;
+    *)
+        echo "$task is not supported"
+esac
+
 work_dir='/data/apps/search/'
 cmd=${work_dir}${1}'.py'
 out=${work_dir}'logs/'${1}'.out'
