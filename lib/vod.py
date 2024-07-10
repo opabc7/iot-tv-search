@@ -72,9 +72,6 @@ class Vod:
             self.logger.exception(e)
             return ConsumeStatus.RECONSUME_LATER
 
-    def plus(self, body):
-        return body
-
     def pre_mq_msg(self, msg):
         body = msg.body.decode()
 
@@ -83,6 +80,9 @@ class Vod:
 
         self.logger.info('received message - %s - %s', _id, _title)
         return _id, _title, body
+
+    def plus(self, body):
+        return body
 
     def write_db(self, _id, title, body, body_plus):
         _thread = threading.get_ident()
@@ -139,4 +139,3 @@ class VirtualProgram(Vod):
 class Person(Vod):
     def __init__(self, work_dir):
        Vod.__init__(self, work_dir, 'person', 'sid', 'title')
-
