@@ -57,13 +57,17 @@ class Vod:
 
     def handle_mq(self, msg):
         try:
-            _id, title, body = self.pre_mq_msg(msg)
+            body = msg.body.decode()
 
-            body_plus = self.plus(body)
+            doc = json.loads(body)
+            _id, title = doc[self._id_field], doc[self.title_field]
+            self.logger.info('received message - %s - %s', _id, title)
 
-            self.write_db(_id, title, body, body_plus)
+            doc_plus = self.plus(doc)
 
-            self.write_es(body_plus)
+            self.write_db(_id, title, body, json.dumps(doc_plus))
+
+            self.write_es(doc_plus)
 
             self.logger.info('completed message - %s - %s', _id, title)
             return ConsumeStatus.CONSUME_SUCCESS
@@ -72,17 +76,8 @@ class Vod:
             self.logger.exception(e)
             return ConsumeStatus.RECONSUME_LATER
 
-    def pre_mq_msg(self, msg):
-        body = msg.body.decode()
-
-        body_json = json.loads(body)
-        _id, _title = body_json[self._id_field], body_json[self.title_field]
-
-        self.logger.info('received message - %s - %s', _id, _title)
-        return _id, _title, body
-
-    def plus(self, body):
-        return body
+    def plus(self, doc):
+        return doc
 
     def write_db(self, _id, title, body, body_plus):
         _thread = threading.get_ident()
@@ -112,7 +107,7 @@ class Vod:
 
         db_connection.commit()
 
-    def write_es(self, body):
+    def write_es(self, doc):
         pass
 
     def start(self):
@@ -128,14 +123,175 @@ class Vod:
 
         mq_consumer.shutdown()
 
-class Album(Vod):
+class Person(Vod):
     def __init__(self, work_dir):
-       Vod.__init__(self, work_dir, 'album', 'sid', 'title')
+       Vod.__init__(self, work_dir, 'person', 'sid', 'title')
 
 class VirtualProgram(Vod):
     def __init__(self, work_dir):
        Vod.__init__(self, work_dir, 'virtual_program', 'virtualSid', 'title')
 
-class Person(Vod):
+class Album(Vod):
     def __init__(self, work_dir):
-       Vod.__init__(self, work_dir, 'person', 'sid', 'title')
+       Vod.__init__(self, work_dir, 'album', 'sid', 'title')
+
+    def plus(self, doc):
+        doc_plus = doc.copy()
+
+        if 'tags' in doc_plus and doc_plus['tags']:
+            doc_plus['tags'] = doc_plus['tags'].split("|")
+        if "cid" not in doc_plus and "sourceAlbumId" in doc_plus:
+            doc_plus["cid"] = doc_plus["sourceAlbumId"]
+
+        doc_plus['episodes.brief'] = []
+        doc_plus['episodes.copyrightCode'] = []
+        doc_plus['episodes.createTime'] = []
+        doc_plus['episodes.eid'] = []
+        doc_plus['episodes.episode'] = []
+        doc_plus['episodes.episodeIndex'] = []
+        doc_plus['episodes.featureType'] = []
+        doc_plus['episodes.horizontalIcon'] = []
+        doc_plus['episodes.linkType'] = []
+        doc_plus['episodes.linkValue'] = []
+        doc_plus['episodes.markCode'] = []
+        doc_plus['episodes.productCode'] = []
+        doc_plus['episodes.productName'] = []
+        doc_plus['episodes.status'] = []
+        doc_plus['episodes.subscriptCode'] = []
+        doc_plus['episodes.title'] = []
+        doc_plus['episodes.updateTime'] = []
+        doc_plus['episodes.verticalIcon'] = []
+        doc_plus['episodes.vipType'] = []
+        if 'episodes' in doc_plus and doc_plus['episodes']:
+            for episode in doc_plus['episodes']:
+                if 'brief' in episode:
+                    doc_plus['episodes.brief'].append(episode['brief'])
+                if 'copyrightCode' in episode:
+                    doc_plus['episodes.copyrightCode'].append(episode['copyrightCode'])
+                if 'createTime' in episode:
+                    doc_plus['episodes.createTime'].append(episode['createTime'])
+                if 'eid' in episode:
+                    doc_plus['episodes.eid'].append(episode['eid'])
+                if 'episode' in episode:
+                    doc_plus['episodes.episode'].append(episode['episode'])
+                if 'episodeIndex' in episode:
+                    doc_plus['episodes.episodeIndex'].append(episode['episodeIndex'])
+                if 'featureType' in episode:
+                    doc_plus['episodes.featureType'].append(episode['featureType'])
+                if 'horizontalIcon' in episode:
+                    doc_plus['episodes.horizontalIcon'].append(episode['horizontalIcon'])
+                if 'linkType' in episode:
+                    doc_plus['episodes.linkType'].append(episode['linkType'])
+                if 'linkValue' in episode:
+                    doc_plus['episodes.linkValue'].append(episode['linkValue'])
+                if 'markCode' in episode:
+                    doc_plus['episodes.markCode'].append(episode['markCode'])
+                if 'productCode' in episode:
+                    doc_plus['episodes.productCode'].append(episode['productCode'])
+                if 'productName' in episode:
+                    doc_plus['episodes.productName'].append(episode['productName'])
+                if 'status' in episode:
+                    doc_plus['episodes.status'].append(episode['status'])
+                if 'subscriptCode' in episode:
+                    doc_plus['episodes.subscriptCode'].append(episode['subscriptCode'])
+                if 'title' in episode:
+                    doc_plus['episodes.title'].append(episode['title'])
+                if 'updateTime' in episode:
+                    doc_plus['episodes.updateTime'].append(episode['updateTime'])
+                if 'verticalIcon' in episode:
+                    doc_plus['episodes.verticalIcon'].append(episode['verticalIcon'])
+                if 'vipType' in episode:
+                    doc_plus['episodes.vipType'].append(episode['vipType'])
+
+        doc_plus['persons.headImg'] = []
+        doc_plus['persons.personName'] = []
+        doc_plus['persons.personSid'] = []
+        doc_plus['persons.roleImg'] = []
+        doc_plus['persons.roleName'] = []
+        doc_plus['persons.roleType'] = []
+        doc_plus['persons.source'] = []
+        doc_plus['persons.squareImg'] = []
+        if 'persons' in doc_plus and doc_plus['persons']:
+            for person in doc_plus['persons']:
+                if 'headImg' in person:
+                    doc_plus['persons.headImg'].append(person['headImg'])
+                if 'personName' in person:
+                    doc_plus['persons.personName'].append(person['personName'])
+                if 'personSid' in person:
+                    doc_plus['persons.personSid'].append(person['personSid'])
+                if 'roleImg' in person:
+                    doc_plus['persons.roleImg'].append(person['roleImg'])
+                if 'roleName' in person:
+                    doc_plus['persons.roleName'].append(person['roleName'])
+                if 'roleType' in person:
+                    doc_plus['persons.roleType'].append(person['roleType'])
+                if 'source' in person:
+                    doc_plus['persons.source'].append(person['source'])
+                if 'squareImg' in person:
+                    doc_plus['persons.squareImg'].append(person['squareImg'])
+
+        if 'showTime' in doc_plus:
+            doc_plus['showTime'] = self.convert_showtime(doc_plus['sid'], doc_plus['showTime'])
+
+        self.gen_roles(doc_plus['sid'], doc_plus)
+
+        return doc_plus
+
+    def convert_showtime(self, sid, showtime):
+        try:
+            if showtime == "" or showtime == "0000-00-00 00:00:00" or len(showtime.split(' ')) == 3:
+                self.logger.error('unknown time format - %s - %s', sid, showtime)
+                return "2020-01-01 00:00:00"
+
+            if len(showtime.split(' ')) == 1:
+                try:
+                    timeArray = time.strptime(showtime, "%Y-%m-%d")
+                    showtime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+                except Exception as e:
+                    self.logger.error('unknown time format - %s - %s', sid, showtime)
+                    self.logger.exception(e)
+
+                    try:
+                        timeArray = time.strptime(showtime, "%Y%m")
+                        showtime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+                    except Exception as e:
+                        self.logger.error('unknown time format - %s - %s', sid, showtime)
+                        self.logger.exception(e)
+                        return "2020-01-01 00:00:00"
+
+                return showtime
+
+            if len(showtime.split(' ')) == 2:
+                timeArray = time.strptime(showtime, "%Y-%m-%d %H:%M:%S")
+                showtime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+                return showtime
+        except Exception as e:
+            self.logger.error('unknown time format - %s - %s', sid, showtime)
+            self.logger.exception(e)
+            return "2020-01-01 00:00:00"
+
+    def gen_roles(self, sid, doc):
+        roles = {
+            1 : "导演",
+            2 : "演员",
+            3 : "编剧",
+            4 : "制片人",
+        }
+
+        doc['stars'] = []
+        doc['directors'] = []
+        if 'persons.personName' not in doc or 'persons.roleType' not in doc:
+            self.logger.error("persons has no personName or roleType - %s", sid)
+            return
+
+        personName = doc['persons.personName']
+        roleType = doc['persons.roleType']
+        if len(personName) != len(roleType):
+            self.logger.error("persons and roleType size not equal - %s", sid)
+            return
+
+        for index, value in enumerate(roleType):
+            if value == 1:
+                doc['directors'].append(personName[index])
+            if value == 2:
+                doc['stars'].append(personName[index])
