@@ -59,9 +59,11 @@ class Vod:
         try:
             _id, title, body = self.pre_mq_msg(msg)
 
-            self.write_db(_id, title, body)
+            body_plus = self.plus(body)
 
-            self.write_es()
+            self.write_db(_id, title, body, body_plus)
+
+            self.write_es(body_plus)
 
             self.logger.info('completed message - %s - %s', _id, title)
             return ConsumeStatus.CONSUME_SUCCESS
@@ -69,6 +71,9 @@ class Vod:
             self.logger.error('failed message - %s', msg)
             self.logger.exception(e)
             return ConsumeStatus.RECONSUME_LATER
+
+    def plus(self, body):
+        return body
 
     def pre_mq_msg(self, msg):
         body = msg.body.decode()
@@ -79,7 +84,7 @@ class Vod:
         self.logger.info('received message - %s - %s', _id, _title)
         return _id, _title, body
 
-    def write_db(self, _id, title, body):
+    def write_db(self, _id, title, body, body_plus):
         _thread = threading.get_ident()
 
         if _thread in self.db_connections:
@@ -107,7 +112,7 @@ class Vod:
 
         db_connection.commit()
 
-    def write_es(self):
+    def write_es(self, body):
         pass
 
     def start(self):
