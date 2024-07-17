@@ -73,7 +73,7 @@ class Vod:
 
             self.write_db(_id, title, body, json.dumps(doc_plus))
 
-            self.write_more(doc_plus)
+            self.write_more(_id, doc_plus)
 
             self.logger.info('completed message - %s - %s', _id, title)
             return ConsumeStatus.CONSUME_SUCCESS
@@ -113,7 +113,7 @@ class Vod:
 
         db_connection.commit()
 
-    def write_more(self, doc):
+    def write_more(self, _id, doc):
         pass
 
     def start(self):
@@ -144,7 +144,7 @@ class AlbumHeat(Vod):
     def __init__(self, work_dir):
        Vod.__init__(self, work_dir, 'album_heat', 'sid', None)
 
-       self.rocksclient = RocksClient(self.rocksdb_path)
+       self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
 
     def init_config_task(self, task, fpath):
         # config:task
@@ -164,8 +164,9 @@ class AlbumHeat(Vod):
         # config:task:rocksdb
         self.rocksdb_path = task_config['rocksdb']['path']
 
-    def write_more(self, doc):
-        pass
+    def write_more(self, _id, doc):
+        self.rocksclient.insert(_id, doc)
+        self.logger.info('rocks insert - %s - %s', _id)
 
 class Album(Vod):
 
