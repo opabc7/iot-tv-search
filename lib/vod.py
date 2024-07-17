@@ -61,7 +61,9 @@ class Vod:
             body = msg.body.decode()
 
             doc = json.loads(body)
-            _id, title = doc[self._id_field], doc[self.title_field]
+            _id, title = doc[self._id_field], None
+            if self.title_field:
+                title = doc[self.title_field]
             self.logger.info('received message - %s - %s', _id, title)
 
             doc_plus = self.plus(doc)
@@ -137,7 +139,7 @@ class VirtualProgram(Vod):
 class AlbumHeat(Vod):
 
     def __init__(self, work_dir):
-       Vod.__init__(self, work_dir, 'album_heat', 'sid', 'title')
+       Vod.__init__(self, work_dir, 'album_heat', 'sid')
 
 class Album(Vod):
 
