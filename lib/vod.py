@@ -134,6 +134,11 @@ class VirtualProgram(Vod):
     def __init__(self, work_dir):
        Vod.__init__(self, work_dir, 'virtual_program', 'virtualSid', 'title')
 
+class AlbumHeat(Vod):
+
+    def __init__(self, work_dir):
+       Vod.__init__(self, work_dir, 'album_heat', 'sid', 'title')
+
 class Album(Vod):
 
     def __init__(self, work_dir):
