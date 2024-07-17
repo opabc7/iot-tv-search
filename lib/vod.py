@@ -13,6 +13,7 @@ import pymysql.cursors
 import threading
 
 class Vod:
+
     def __init__(self, work_dir, task, _id_field, title_field):
         self.db_connections = {}
 
@@ -124,14 +125,17 @@ class Vod:
         mq_consumer.shutdown()
 
 class Person(Vod):
+
     def __init__(self, work_dir):
        Vod.__init__(self, work_dir, 'person', 'sid', 'title')
 
 class VirtualProgram(Vod):
+
     def __init__(self, work_dir):
        Vod.__init__(self, work_dir, 'virtual_program', 'virtualSid', 'title')
 
 class Album(Vod):
+
     def __init__(self, work_dir):
        Vod.__init__(self, work_dir, 'album', 'sid', 'title')
 
