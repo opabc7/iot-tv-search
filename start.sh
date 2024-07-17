@@ -3,11 +3,12 @@
 task=$1
 
 case "$task" in
-    album|person|virtual_program)
+    album|person|virtual_program|album_heat)
         echo "task:    ${task}"
     ;;
     *)
         echo "$task is not supported"
+        exit
 esac
 
 work_dir='/data/apps/search/'
