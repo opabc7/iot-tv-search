@@ -11,6 +11,7 @@ import time
 import json
 import pymysql.cursors
 import threading
+from lib.rocksclient import RocksClient
 
 class Vod:
 
@@ -19,14 +20,15 @@ class Vod:
 
         self._id_field, self.title_field = _id_field, title_field
         self.init_logger(os.path.join(work_dir, 'conf', task, 'logging.ini'))
-        self.init_config(os.path.join(work_dir, 'conf/config.ini'), task, os.path.join(work_dir, 'conf', task, 'config.ini'))
+        self.init_config(os.path.join(work_dir, 'conf/config.ini'))
+        self.init_config_task(task, os.path.join(work_dir, 'conf', task, 'config.ini'))
 
     def init_logger(self, fpath):
         logging.config.fileConfig(fpath)
         self.logger = logging.getLogger()
         self.logger.info('logger created.')
 
-    def init_config(self, fpath, task, fpath_task):
+    def init_config(self, fpath):
         config = configparser.RawConfigParser()
         config.read(fpath)
         self.logger.info('config loaded.')
@@ -42,9 +44,10 @@ class Vod:
         # config:mq
         self.mq_addr = config['mq']['mq_addr']
 
+    def init_config_task(self, task, fpath):
         # config:task
         task_config = configparser.RawConfigParser()
-        task_config.read(fpath_task)
+        task_config.read(fpath)
         self.logger.info('%s config loaded.', task)
 
         # config:task:db
@@ -70,7 +73,7 @@ class Vod:
 
             self.write_db(_id, title, body, json.dumps(doc_plus))
 
-            self.write_es(doc_plus)
+            self.write_more(doc_plus)
 
             self.logger.info('completed message - %s - %s', _id, title)
             return ConsumeStatus.CONSUME_SUCCESS
@@ -110,7 +113,7 @@ class Vod:
 
         db_connection.commit()
 
-    def write_es(self, doc):
+    def write_more(self, doc):
         pass
 
     def start(self):
@@ -139,7 +142,30 @@ class VirtualProgram(Vod):
 class AlbumHeat(Vod):
 
     def __init__(self, work_dir):
-       Vod.__init__(self, work_dir, 'album_heat', 'sid')
+       Vod.__init__(self, work_dir, 'album_heat', 'sid', None)
+
+       self.rocksclient = RocksClient(self.rocksdb_path)
+
+    def init_config_task(self, task, fpath):
+        # config:task
+        task_config = configparser.RawConfigParser()
+        task_config.read(fpath)
+        self.logger.info('%s config loaded.', task)
+
+        # config:task:db
+        self.doc_sql_query = task_config['db']['doc_sql_query']
+        self.doc_sql_insert = task_config['db']['doc_sql_insert']
+        self.doc_sql_update = task_config['db']['doc_sql_update']
+
+        # config:task:mq
+        self.mq_consumer_id = task_config['mq']['mq_consumer']
+        self.mq_topic = task_config['mq']['mq_topic']
+
+        # config:task:rocksdb
+        self.rocksdb_path = task_config['rocksdb']['path']
+
+    def write_more(self, doc):
+        pass
 
 class Album(Vod):
 

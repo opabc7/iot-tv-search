@@ -33,7 +33,7 @@ class RocksClient:
         pass
 
 if __name__ == "__main__":
-    rocksclient = RocksClient()
+    rocksclient = RocksClient(sys.argv[1])
     snapshot = rocksclient.db.snapshot()
     it = rocksclient.db.iteritems(snapshot = snapshot)
 
