@@ -19,18 +19,19 @@ class RocksClient:
         else:
             return bytes(str(data), 'utf8')
 
-    def put(self, id, doc):
-        self.db.put(self.str2bytes(id), self.str2bytes(doc))
+    def put(self, _id, doc):
+        self.db.put(self.str2bytes(_id), self.str2bytes(doc))
 
-    def get(self, id):
-        return self.db.get(self.str2bytes(id))
+    def get(self, _id):
+        return self.db.get(self.str2bytes(_id))
 
-    def delete(self, id):
-        self.db.delete(self.str2bytes(id))
+    def delete(self, _id):
+        self.db.delete(self.str2bytes(_id))
 
 if __name__ == "__main__":
     rocksclient = RocksClient(sys.argv[1])
 
-    it = rocksclient.db.iterkeys()
+    it = rocksclient.db.iteritems()
     it.seek_to_first()
-    print(list(it))
+    for item in it:
+        print(item)
