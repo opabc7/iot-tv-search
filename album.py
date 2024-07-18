@@ -4,6 +4,9 @@ import faulthandler
 import os
 from lib.vod import Vod
 import time
+from lib.rocksclient import RocksClient
+import json
+from lib import processHot
 
 class Album(Vod):
 
@@ -11,6 +14,14 @@ class Album(Vod):
        os.environ['vod_task'] = 'album'
 
        Vod.__init__(self, work_dir, 'sid', 'title')
+
+       self.rocksclient = RocksClient(self.rocksdb_path)
+
+    def init_config_task(self):
+        task_config = Vod.init_config_task(self)
+
+        # config:task:rocksdb
+        self.rocksdb_path = task_config['rocksdb']['path']
 
     def process_doc(self, doc):
         doc_plus = doc.copy()
@@ -294,7 +305,24 @@ class Album(Vod):
             self.logger.exception(e)
 
     def gen_hot(self, sid, doc):
-        pass
+        try:
+            hot_info_str = self.rocksclient.get(sid)
+
+            if hot_info_str is None:
+                doc['hot'] = 0.0
+                doc['playNum'] = 0
+
+                self.logger.info('gen hot - %s - %s - %s', sid, doc['hot'], doc['playNum'])
+            else:
+                new_score, playNum = processHot.process_data(hot_info_str)
+                
+                doc['hot'] = new_score
+                doc['playNum'] = playNum
+
+                self.logger.info('gen hot - %s - %s - %s', sid, new_score, playNum)
+        except Exception as e:
+            self.logger.error('gen hot failed - %s', sid)
+            self.logger.exception(e)
 
     def gen_virtual(self, sid, doc):
         pass
