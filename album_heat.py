@@ -9,6 +9,7 @@ class AlbumHeat(Vod):
 
     def __init__(self, work_dir):
        os.environ['vod_task'] = 'album_heat'
+
        Vod.__init__(self, work_dir, 'sid', None)
 
        self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
