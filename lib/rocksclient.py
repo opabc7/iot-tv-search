@@ -12,31 +12,25 @@ class RocksClient:
             self.db = rocksdb.DB(path, rocksdb.Options(create_if_missing=True), read_only=True)
 
     def str2bytes(self, data):
-        if isinstance(data, str):
+        if isinstance(data, bytes):
+            return data
+        elif isinstance(data, str):
             return bytes(data, 'utf8')
         else:
             return bytes(str(data), 'utf8')
 
-    def insert(self, id, doc):
-        self.db.put(self.str2bytes(id), self.str2bytes(doc))
-
-    def delete(self, id):
-        self.db.delete(self.str2bytes(id))
-
-    def update(self, id, doc):
+    def put(self, id, doc):
         self.db.put(self.str2bytes(id), self.str2bytes(doc))
 
     def get(self, id):
         return self.db.get(self.str2bytes(id))
 
-    def close(self):
-        pass
+    def delete(self, id):
+        self.db.delete(self.str2bytes(id))
 
 if __name__ == "__main__":
     rocksclient = RocksClient(sys.argv[1])
-    snapshot = rocksclient.db.snapshot()
-    it = rocksclient.db.iteritems(snapshot = snapshot)
 
+    it = rocksclient.db.iterkeys()
     it.seek_to_first()
-    for key, doc in dict(it).items():
-        print(key, doc)
+    print(list(it))
