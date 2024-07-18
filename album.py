@@ -309,17 +309,34 @@ class Album(Vod):
             hot_info_str = self.rocksclient.get(sid)
 
             if hot_info_str is None:
-                doc['hot'] = 0.0
-                doc['playNum'] = 0
+                score = 0.0
+                playNum = 0
 
-                self.logger.info('gen hot - %s - %s - %s', sid, doc['hot'], doc['playNum'])
+                doc['hot'], doc['playNum'] = score, playNum
+                self.logger.info('gen hot - %s - %s - %s', sid, score, playNum)
             else:
-                new_score, playNum = processHot.process_data(hot_info_str)
-                
-                doc['hot'] = new_score
-                doc['playNum'] = playNum
+                hot_info = json.loads(hot_info_str)
+                playNum = hot_info['playNum']
 
-                self.logger.info('gen hot - %s - %s - %s', sid, new_score, playNum)
+                if 'source' in hot_info:
+                    if hot_info['source'] == "tencent":
+                        score = processHot.process_tencent(hot_info)
+                    elif hot_info['source'] == "youku":
+                        score = processHot.process_youku(hot_info)
+                    elif hot_info['source'] == "iqiyi":
+                        score = processHot.process_iqiyi(hot_info)
+                    elif hot_info['source'] == "bilibili":
+                        score = processHot.process_bilibili(hot_info)
+                    elif hot_info['source'] == "mgtv":
+                        score = processHot.process_mgtv(hot_info)
+                    else:
+                        score = 0.0
+                else:
+                    score = 0.0
+
+                doc['hot'] = score
+                doc['playNum'] = playNum
+                self.logger.info('gen hot - %s - %s - %s', sid, score, playNum)
         except Exception as e:
             self.logger.error('gen hot failed - %s', sid)
             self.logger.exception(e)
