@@ -26,7 +26,7 @@ class Vod:
         self.init_config_task()
 
     def init_logger(self):
-        fpath = os.path.join(self.work_dir, 'conf', self.task, 'logging.ini')
+        fpath = os.path.join(self.work_dir, 'conf', 'logging.ini')
 
         logging.config.fileConfig(fpath)
         self.logger = logging.getLogger()
