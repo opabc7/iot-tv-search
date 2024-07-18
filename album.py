@@ -7,6 +7,7 @@ import time
 from lib.rocksclient import RocksClient
 import json
 from lib import processHot
+import demjson3
 
 class Album(Vod):
 
@@ -305,6 +306,7 @@ class Album(Vod):
             self.logger.exception(e)
 
     def gen_hot(self, sid, doc):
+        hot_info_str = sid
         try:
             hot_info_str = self.rocksclient.get(sid)
 
@@ -315,7 +317,7 @@ class Album(Vod):
                 doc['hot'], doc['playNum'] = score, playNum
                 self.logger.info('gen hot - %s - %s - %s', sid, score, playNum)
             else:
-                hot_info = json.loads(hot_info_str)
+                hot_info = demjson3.decode(hot_info_str)
                 playNum = hot_info['playNum']
 
                 if 'source' in hot_info:
@@ -338,7 +340,7 @@ class Album(Vod):
                 doc['playNum'] = playNum
                 self.logger.info('gen hot - %s - %s - %s', sid, score, playNum)
         except Exception as e:
-            self.logger.error('gen hot failed - %s', sid)
+            self.logger.error('gen hot failed - %s', hot_info_str)
             self.logger.exception(e)
 
     def gen_virtual(self, sid, doc):
