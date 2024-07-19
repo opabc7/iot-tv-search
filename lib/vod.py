@@ -146,10 +146,3 @@ class Person(Vod):
        os.environ['vod_task'] = 'person'
 
        Vod.__init__(self, work_dir, 'sid', 'title')
-
-class VirtualProgram(Vod):
-
-    def __init__(self, work_dir):
-       os.environ['vod_task'] = 'virtual_program'
-
-       Vod.__init__(self, work_dir, 'virtualSid', 'title')
