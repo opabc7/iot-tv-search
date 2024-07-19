@@ -19,6 +19,51 @@ source_priority = {
     "other":    0
 }
 
+contentType_dict = {
+    u"movie" : u"电影",
+    u"tv" : u"电视剧",
+    u"show" : u"综艺",
+    u"kids" : u"少儿",
+    u"comic" : u"动漫",
+    u"doc" : u"记录",
+    u"sports" : u"体育",
+    u"game" : u"游戏",
+    u"news" : u"新闻",
+    u"ent" : u"娱乐",
+    u"life" : u"生活",
+    u"fashion" : u"时尚",
+    u"music" : u"音乐",
+    u"edu" : u"教育",
+    u"finance" : u"财经",
+    u"tec" : u"科技",
+    u"tour" : u"旅游",
+    u"car" : u"汽车",
+    u"baby" : u"母婴",
+    u"funny" : u"搞笑",
+    u"family" : u"亲子",
+    u"culture" : u"文化",
+    u"origin" : u"原创"
+}
+
+def get_value_with_default(json_data, key, dtype):
+    if key in json_data:
+        return json_data[key]
+    else:
+        if dtype is str:
+            return ''
+        elif dtype is int:
+            return 0
+        elif dtype is float:
+            return 0.0
+        elif dtype is dict:
+            return {}
+        elif dtype is list:
+            return []
+        elif dtype is bool:
+            return False
+        else:
+            return None
+
 class Album(Vod):
 
     def __init__(self, work_dir):
@@ -427,7 +472,63 @@ class Album(Vod):
             self.logger.exception(e)
 
     def gen_mfield(self, sid, doc):
-        pass
+        try:
+            m_field = u""
+
+            title = get_value_with_default(doc, 'title', str)
+            if title:
+                m_field += title + u" | "
+
+            contentType = get_value_with_default(doc, 'contentType', str)
+            if contentType and contentType in contentType_dict:
+                m_field += contentType_dict[contentType] + u" | "
+
+            tags = doc['tags']
+            if tags:
+                for t in tags:
+                    m_field += t + u" | "
+
+            feed_tag = get_value_with_default(doc, 'feed_tag', list)
+            if feed_tag:
+                for tag in feed_tag:
+                    m_field += tag + u" | "
+
+            area = get_value_with_default(doc, 'area', str)
+            if area:
+                m_field += area + u" | "
+
+            brief = get_value_with_default(doc, 'brief', str)
+            if brief:
+                m_field += brief + u" | "
+
+            information = get_value_with_default(doc, 'information', str)
+            if information:
+                m_field += information + u" | "
+
+            language = get_value_with_default(doc, 'language', str)
+            if language:
+                m_field += language + u" | "
+
+            name = get_value_with_default(doc, 'name', str)
+            if name:
+                m_field += name + u" | "
+
+            if 'persons' in doc and doc['persons']:
+                persons = doc['persons']
+                for person in persons:
+                    person_name = person['personName']
+                    if person_name:
+                        m_field += person_name + u" | "
+
+                    role_name = person['roleName']
+                    if role_name:
+                        m_field += role_name + u" | "
+
+            doc['m_field'] = m_field
+            self.logger.info('gen mfield - %s - %s', sid, m_field)
+        except Exception as e:
+            self.logger.error('gen mfield failed - %s', sid)
+            self.logger.exception(e)
 
     def gen_series(self):
         pass
