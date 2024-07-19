@@ -8,7 +8,7 @@ from lib.rocksclient import RocksClient
 import json
 from lib import processHot
 import demjson3
-from lib import album_extractor
+from lib.album_extractor import AlbumExtractor
 
 source_priority = {
     "tencent":  5,
@@ -411,15 +411,17 @@ class Album(Vod):
 
     def gen_season(self, sid, doc):
         try:
-            extractor = album_extractor.AlbumExtractor(self.logger, doc['title'], doc['contentType'])
+            extractor = AlbumExtractor(doc['title'], doc['contentType'])
             extractor.parse_name_season()
 
+            name = extractor.get_name()
             season = extractor.get_season()
             if season >= 2 ** 31 - 1:
                 season = -1
 
-            doc['name'] = extractor.get_name()
+            doc['name'] = name
             doc['season'] = season
+            self.logger.info('gen season - %s - %s - %s', sid, name, season)
         except Exception as e:
             self.logger.error('gen season failed - %s - %s - %s', sid, doc['title'], doc['contentType'])
             self.logger.exception(e)

@@ -3,7 +3,7 @@
 import os
 import sys
 import re
-import chn_processor
+from . import chn_processor
 
 name_type_pri = {
     u"main_title": 0,
@@ -59,15 +59,12 @@ class AlbumExtractor():
         self.title = title
         self.contentType = contentType
 
-        self.name = u''
-        self.season = u''
+        self.name = ''
+        self.season = ''
         self.season_num = -1
 
     def get_name(self):
-        if not self.name:
-            self.name = u""
-
-        return self.name.encode('utf-8')
+        return self.name
 
     def get_season(self):
         return self.season_num
