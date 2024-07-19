@@ -412,8 +412,7 @@ class Album(Vod):
     def gen_season(self, sid, doc):
         try:
             extractor = AlbumExtractor(self.logger, doc['title'], doc['contentType'])
-            extractor.init()
-            extractor.parse_name_season(extractor.title)
+            extractor.parse_name_season()
 
             season = extractor.get_season()
             if season >= 2 ** 31 - 1:
