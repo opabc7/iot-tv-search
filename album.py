@@ -12,11 +12,11 @@ import demjson3
 class Album(Vod):
 
     def __init__(self, work_dir):
-       os.environ['vod_task'] = 'album'
+        os.environ['vod_task'] = 'album'
 
-       Vod.__init__(self, work_dir, 'sid', 'title')
+        Vod.__init__(self, work_dir, 'sid', 'title')
 
-       self.rocksclient = RocksClient(self.rocksdb_path)
+        self.rocksclient = RocksClient(self.rocksdb_path)
 
     def init_config_task(self):
         task_config = Vod.init_config_task(self)

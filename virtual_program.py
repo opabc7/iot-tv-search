@@ -8,12 +8,12 @@ from lib.rocksclient import RocksClient
 class VirtualProgram(Vod):
 
     def __init__(self, work_dir):
-       os.environ['vod_task'] = 'virtual_program'
+        os.environ['vod_task'] = 'virtual_program'
 
-       Vod.__init__(self, work_dir, 'virtualSid', 'title')
+        Vod.__init__(self, work_dir, 'virtualSid', 'title')
 
-       self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
-       self.rocksclient_back = RocksClient(self.rocksdb_path_back, 'rw')
+        self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
+        self.rocksclient_back = RocksClient(self.rocksdb_path_back, 'rw')
 
     def init_config_task(self):
         task_config = Vod.init_config_task(self)

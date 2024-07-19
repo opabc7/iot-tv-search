@@ -139,10 +139,3 @@ class Vod:
             time.sleep(30)
 
         mq_consumer.shutdown()
-
-class Person(Vod):
-
-    def __init__(self, work_dir):
-       os.environ['vod_task'] = 'person'
-
-       Vod.__init__(self, work_dir, 'sid', 'title')
