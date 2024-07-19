@@ -8,7 +8,7 @@ from lib.rocksclient import RocksClient
 import json
 from lib import processHot
 import demjson3
-from lib.album_extractor import AlbumExtractor
+from lib import album_extractor
 
 source_priority = {
     "tencent":  5,
@@ -411,7 +411,7 @@ class Album(Vod):
 
     def gen_season(self, sid, doc):
         try:
-            extractor = AlbumExtractor(self.logger, doc['title'], doc['contentType'])
+            extractor = album_extractor.AlbumExtractor(self.logger, doc['title'], doc['contentType'])
             extractor.parse_name_season()
 
             season = extractor.get_season()
