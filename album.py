@@ -9,6 +9,15 @@ import json
 from lib import processHot
 import demjson3
 
+source_priority = {
+    "tencent":  5,
+    "iqiyi":    4,
+    "youku":    3,
+    "mgtv":     2,
+    "sohu":     1,
+    "other":    0
+}
+
 class Album(Vod):
 
     def __init__(self, work_dir):
@@ -16,13 +25,15 @@ class Album(Vod):
 
         Vod.__init__(self, work_dir, 'sid', 'title')
 
-        self.rocksclient = RocksClient(self.rocksdb_path)
+        self.rocksclient_heat = RocksClient(self.rocksdb_path_heat)
+        self.rocksclient_virtual = RocksClient(self.rocksdb_path_virtual)
 
     def init_config_task(self):
         task_config = Vod.init_config_task(self)
 
         # config:task:rocksdb
-        self.rocksdb_path = task_config['rocksdb']['path']
+        self.rocksdb_path_heat = task_config['rocksdb']['path_heat']
+        self.rocksdb_path_virtual = task_config['rocksdb']['path_virtual']
 
     def process_doc(self, doc):
         doc_plus = doc.copy()
@@ -307,8 +318,9 @@ class Album(Vod):
 
     def gen_hot(self, sid, doc):
         hot_info_str = sid
+
         try:
-            hot_info_str = self.rocksclient.get(sid)
+            hot_info_str = self.rocksclient_heat.get(sid)
 
             if hot_info_str is None:
                 score = 0.0
@@ -344,7 +356,57 @@ class Album(Vod):
             self.logger.exception(e)
 
     def gen_virtual(self, sid, doc):
-        pass
+        virtual_info_str = sid
+
+        try:
+            if doc['status'] != 1 or doc['featureType'] != 1:
+                return
+
+            virtual_info_str = self.rocksclient_virtual.get(sid)
+            if virtual_info_str is None:
+                return
+
+            virtual_info = demjson3.decode(virtual_info_str)
+            virtual_status = virtual_info['status']
+            if virtual_status != 1:
+                return
+
+            doc['virtualSid'] = virtual_info['virtualSid']
+
+            pri_this = 0
+            src_this = doc['copyrightCode']
+            if src_this in source_priority:
+                pri_this = source_priority[src_this]
+
+            hasBigger = False
+            programs = virtual_info['virtualProgramRelList']
+            for program in programs:
+                src_other = program['source']
+                if src_other == src_this:
+                    continue
+
+                program_status = program['status']
+                if program_status != 1:
+                    continue
+
+                pri_other = 0
+                if src_other in source_priority:
+                    pri_other = source_priority[src_other]
+
+                if pri_other > pri_this:
+                    hasBigger = True
+                    break
+
+            if hasBigger:
+                doc['status'] = -1
+                doc['virtual_status'] = 0
+            else:
+                doc['virtual_status'] = 1
+
+            self.logger.info('gen virtual - %s - %s', sid, doc['virtual_status'])
+        except Exception as e:
+            self.logger.error('gen virtual - %s', virtual_info_str)
+            self.logger.exception(e)
 
     def gen_season(self, sid, doc):
         pass
