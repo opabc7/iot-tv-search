@@ -67,19 +67,19 @@ def get_value_with_default(json_data, key, dtype):
 class Album(Vod):
 
     def __init__(self, work_dir):
-        os.environ['vod_task'] = 'album'
+        self.task = os.environ['vod_task'] = 'album'
 
         Vod.__init__(self, work_dir, 'sid', 'title')
 
         self.rocksclient_heat = RocksClient(self.rocksdb_path_heat)
-        self.rocksclient_virtual = RocksClient(self.rocksdb_path_virtual)
+        self.rocksclient_virtual_program = RocksClient(self.rocksdb_path_virtual_program)
 
     def init_config_task(self):
         task_config = Vod.init_config_task(self)
 
         # config:task:rocksdb
-        self.rocksdb_path_heat = task_config['rocksdb']['path_heat']
-        self.rocksdb_path_virtual = task_config['rocksdb']['path_virtual']
+        self.rocksdb_path_heat = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[task_config['rocksdb']['heat']])
+        self.rocksdb_path_virtual_program = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[task_config['rocksdb']['virtual_program']])
 
     def process_doc(self, doc):
         doc_plus = doc.copy()
@@ -408,7 +408,7 @@ class Album(Vod):
             if doc['status'] != 1 or doc['featureType'] != 1:
                 return
 
-            virtual_info_str = self.rocksclient_virtual.get(sid)
+            virtual_info_str = self.rocksclient_virtual_program.get(sid)
             if virtual_info_str is None:
                 return
 

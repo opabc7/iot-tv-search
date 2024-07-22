@@ -8,19 +8,19 @@ from lib.rocksclient import RocksClient
 class VirtualProgram(Vod):
 
     def __init__(self, work_dir):
-        os.environ['vod_task'] = 'virtual_program'
+        self.task = os.environ['vod_task'] = 'virtual_program'
 
         Vod.__init__(self, work_dir, 'virtualSid', 'title')
 
         self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
-        self.rocksclient_back = RocksClient(self.rocksdb_path_back, 'rw')
+        self.rocksclient_album = RocksClient(self.rocksdb_path_album, 'rw')
 
     def init_config_task(self):
         task_config = Vod.init_config_task(self)
 
         # config:task:rocksdb
-        self.rocksdb_path = task_config['rocksdb']['path']
-        self.rocksdb_path_back = task_config['rocksdb']['path_back']
+        self.rocksdb_path = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[self.task])
+        self.rocksdb_path_album = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[task_config['rocksdb']['album']])
 
     def write_plus(self, _id, title, body_plus, doc_plus):
         self.rocksclient.put(_id, body_plus)
@@ -29,7 +29,7 @@ class VirtualProgram(Vod):
         if 'virtualProgramRelList' in doc_plus and len(doc_plus['virtualProgramRelList']):
             for vlist in doc_plus['virtualProgramRelList']:
                 if 'sid' in vlist:
-                    self.rocksclient_back.put(vlist['sid'], body_plus)
+                    self.rocksclient_album.put(vlist['sid'], body_plus)
                     self.logger.info('rocks put(album) - %s - %s', vlist['sid'], body_plus)
 
 if __name__ == '__main__':

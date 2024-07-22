@@ -18,7 +18,6 @@ class Vod:
         self.db_connections = {}
 
         self.work_dir = work_dir
-        self.task = os.getenv('vod_task')
         self._id_field, self.title_field = _id_field, title_field
 
         self.init_logger()
@@ -49,6 +48,19 @@ class Vod:
 
         # config:mq
         self.mq_addr = config['mq']['mq_addr']
+
+        # config:log
+        os.environ['vod_log_root'] = config['log']['root']
+
+        # config:rocksdb
+        self.rocksdb_config = {}
+        for key in config['rocksdb']:
+            self.rocksdb_config[key] = config['rocksdb'][key]
+
+        # config:ext_data
+        self.ext_data_config = {}
+        for key in config['ext_data']:
+            self.ext_data_config[key] = config['ext_data'][key]
 
     def init_config_task(self):
         fpath = os.path.join(self.work_dir, 'conf', self.task, 'config.ini')

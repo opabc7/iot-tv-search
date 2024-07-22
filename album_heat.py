@@ -8,7 +8,7 @@ from lib.rocksclient import RocksClient
 class AlbumHeat(Vod):
 
     def __init__(self, work_dir):
-        os.environ['vod_task'] = 'album_heat'
+        self.task = os.environ['vod_task'] = 'album_heat'
 
         Vod.__init__(self, work_dir, 'sid', None)
 
@@ -18,7 +18,7 @@ class AlbumHeat(Vod):
         task_config = Vod.init_config_task(self)
 
         # config:task:rocksdb
-        self.rocksdb_path = task_config['rocksdb']['path']
+        self.rocksdb_path = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[self.task])
 
     def write_plus(self, _id, title, body_plus, doc_plus):
         self.rocksclient.put(_id, body_plus)
