@@ -2,7 +2,7 @@
 
 import faulthandler
 import os
-from lib.vod import Vod
+from vod.base import Vod
 import time
 from lib.rocksclient import RocksClient
 import json

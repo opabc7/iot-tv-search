@@ -2,7 +2,7 @@
 
 import faulthandler
 import os
-from lib.vod import Vod
+from vod.base import Vod
 from lib.rocksclient import RocksClient
 
 class AlbumHeat(Vod):
