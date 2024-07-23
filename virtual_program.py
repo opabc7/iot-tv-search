@@ -5,7 +5,7 @@ import os
 from vod.handler import VodHandler
 from lib.rocksclient import RocksClient
 
-class VirtualProgram(VodHandler):
+class VirtualProgramHandler(VodHandler):
 
     def __init__(self, work_dir):
         self.task = os.environ['vod_task'] = 'virtual_program'
@@ -35,4 +35,4 @@ class VirtualProgram(VodHandler):
 if __name__ == '__main__':
     faulthandler.enable()
 
-    VirtualProgram(os.path.dirname(__file__)).start()
+    VirtualProgramHandler(os.path.dirname(__file__)).start()

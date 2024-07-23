@@ -5,7 +5,7 @@ import os
 from vod.handler import VodHandler
 from lib.rocksclient import RocksClient
 
-class Person(VodHandler):
+class PersonHandler(VodHandler):
 
     def __init__(self, work_dir):
         self.task = os.environ['vod_task'] = 'person'
@@ -92,4 +92,4 @@ class Person(VodHandler):
 if __name__ == '__main__':
     faulthandler.enable()
 
-    Person(os.path.dirname(__file__)).start()
+    PersonHandler(os.path.dirname(__file__)).start()

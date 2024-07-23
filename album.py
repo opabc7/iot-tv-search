@@ -16,7 +16,7 @@ from vod import vod_datadict
 featureType_pattern1 = r"花絮|精彩集锦|片段|彩蛋|预告|排行|首映礼|精彩看点|纪录片|特别纪录|混剪|名场面|周诌大电影"
 featureType_pattern2 = r"幕后"
 
-class Album(VodHandler):
+class AlbumHandler(VodHandler):
 
     def __init__(self, work_dir):
         self.task = os.environ['vod_task'] = 'album'
@@ -143,7 +143,6 @@ class Album(VodHandler):
 
         self.gen_roles(sid, doc_plus)
         self.gen_feed(sid, doc_plus)
-
         self.gen_hot(sid, doc_plus)
         self.gen_virtual(sid, doc_plus)
         self.gen_season(sid, doc_plus)
@@ -232,83 +231,83 @@ class Album(VodHandler):
             feed_tag = []
             # 豆瓣高分 电影、电视剧、综艺&豆瓣评分8.0以上从高排序
             if (contentType == "tv" or contentType == "movie" or contentType == "show") and sourceScore >= 8.0:
-                feed_tag.append(u"豆瓣高分")
+                feed_tag.append("豆瓣高分")
                 # 热播大片 电影、电视剧&播放量&2020上映
                 # TODO: show_count
             if (contentType == "tv" or contentType == "movie") and (year == 2020):
-                feed_tag.append(u"热播大片")
+                feed_tag.append("热播大片")
             # 都市生活 电视剧、电影&都市
-            if (contentType == "tv" or contentType == "movie") and (u"都市" in tags):
-                feed_tag.append(u"都市生活")
+            if (contentType == "tv" or contentType == "movie") and ("都市" in tags):
+                feed_tag.append("都市生活")
             # 玄幻史诗 电视剧&玄幻、史诗
-            if contentType == "tv" and (u"奇幻" in tags):
-                feed_tag.append(u"玄幻史诗")
+            if contentType == "tv" and ("奇幻" in tags):
+                feed_tag.append("玄幻史诗")
             # 青春校园 电视剧&青春
-            if contentType == "tv" and (u"青春" in tags):
-                feed_tag.append(u"青春校园")
+            if contentType == "tv" and ("青春" in tags):
+                feed_tag.append("青春校园")
             # 军旅抗战 电视剧&军旅、抗战、抗日、谍战
-            if contentType == "tv" and (u"军旅" in tags or u"抗战" in tags or u"抗日" in tags or u"谍战" in tags):
-                feed_tag.append(u"军旅抗战")
+            if contentType == "tv" and ("军旅" in tags or "抗战" in tags or "抗日" in tags or "谍战" in tags):
+                feed_tag.append("军旅抗战")
             # 爆笑喜剧 电视剧、电影、综艺&搞笑、喜剧
-            if (contentType == "tv" or contentType == "movie" or contentType == u"show") and (u"搞笑" in tags or u"喜剧" in tags):
-                feed_tag.append(u"爆笑喜剧")
+            if (contentType == "tv" or contentType == "movie" or contentType == "show") and ("搞笑" in tags or "喜剧" in tags):
+                feed_tag.append("爆笑喜剧")
             # 武侠江湖 电视剧、电影&武侠、江湖
-            if (contentType == "tv" or contentType == "movie") and (u"武侠" in tags or u"江湖" in tags):
-                feed_tag.append(u"武侠江湖")
+            if (contentType == "tv" or contentType == "movie") and ("武侠" in tags or "江湖" in tags):
+                feed_tag.append("武侠江湖")
             # 劲爆美剧 电视剧、电影&美国&美国
-            if (contentType == "tv") and (u"美国" == area):
-                feed_tag.append(u"劲爆美剧")
+            if (contentType == "tv") and ("美国" == area):
+                feed_tag.append("劲爆美剧")
             # 古装历史 电视剧、电影&古装、历史
-            if (contentType == "tv" or contentType == "movie") and (u"古装" in tags or u"历史" in tags):
-                feed_tag.append(u"古装历史")
+            if (contentType == "tv" or contentType == "movie") and ("古装" in tags or "历史" in tags):
+                feed_tag.append("古装历史")
             # 动画电影 电影&动画
-            if (contentType == "movie") and (u"动画" in tags):
-                feed_tag.append(u"动画电影")
+            if (contentType == "movie") and ("动画" in tags):
+                feed_tag.append("动画电影")
             # 悬疑惊悚 电影&悬疑、惊悚、恐怖
-            if (contentType == "movie") and (u"悬疑" in tags or u"惊悚" in tags or u"恐怖" in tags):
-                feed_tag.append(u"悬疑惊悚")
+            if (contentType == "movie") and ("悬疑" in tags or "惊悚" in tags or "恐怖" in tags):
+                feed_tag.append("悬疑惊悚")
             # 真人秀场 综艺&脱口秀、养成、体验
-            if (contentType == "show") and (u"脱口秀" in tags or u"养成" in tags or u"体验" in tags):
-                feed_tag.append(u"真人秀场")
+            if (contentType == "show") and ("脱口秀" in tags or "养成" in tags or "体验" in tags):
+                feed_tag.append("真人秀场")
             # 国漫精品 动漫&中国、内地&热血、经典
-            if (contentType == "comic") and (area == u"内地" or area == u"中国") and (u"热血" in tags or u"经典" in tags):
-                feed_tag.append(u"国漫精品")
+            if (contentType == "comic") and (area == "内地" or area == "中国") and ("热血" in tags or "经典" in tags):
+                feed_tag.append("国漫精品")
             # 经典日漫 动漫&日本
-            if (contentType == "comic" and area == u"日本"):
-                feed_tag.append(u"经典日漫")
+            if (contentType == "comic" and area == "日本"):
+                feed_tag.append("经典日漫")
             # 儿童益智 少儿&益智、绘画、早教
-            if (contentType == "kids") and (u"益智" in tags or u"绘画" in tags or u"早教" in tags):
-                feed_tag.append(u"儿童益智")
+            if (contentType == "kids") and ("益智" in tags or "绘画" in tags or "早教" in tags):
+                feed_tag.append("儿童益智")
             # 手工绘画 少儿&手工、绘画、玩具
-            if (contentType == "kids") and (u"手工" in tags or u"绘画" in tags or u"玩具" in tags):
-                feed_tag.append(u"手工绘画")
+            if (contentType == "kids") and ("手工" in tags or "绘画" in tags or "玩具" in tags):
+                feed_tag.append("手工绘画")
             # 儿歌天地 少儿&儿歌
-            if (contentType == "kids") and (u"儿歌" in tags or u"儿童音乐" in tags):
-                feed_tag.append(u"儿歌天地")
+            if (contentType == "kids") and ("儿歌" in tags or "儿童音乐" in tags):
+                feed_tag.append("儿歌天地")
             # 真人特摄 少儿&真人
-            if (contentType == "kids") and (u"真人" in tags):
-                feed_tag.append(u"真人特摄")
+            if (contentType == "kids") and ("真人" in tags):
+                feed_tag.append("真人特摄")
             # 舌尖美食 纪录片&美食
-            if (contentType == "doc") and (u"美食" in tags):
-                feed_tag.append(u"舌尖美食")
+            if (contentType == "doc") and ("美食" in tags):
+                feed_tag.append("舌尖美食")
             # 自然万象 纪录片&自然、动物
-            if (contentType == "doc") and (u"自然" in tags or u"动物" in tags):
-                feed_tag.append(u"自然万象")
+            if (contentType == "doc") and ("自然" in tags or "动物" in tags):
+                feed_tag.append("自然万象")
             # 探索科技 纪录片&科技、探索
-            if (contentType == "doc") and (u"科技" in tags or u"探索" in tags):
-                feed_tag.append(u"探索科技")
+            if (contentType == "doc") and ("科技" in tags or "探索" in tags):
+                feed_tag.append("探索科技")
             # 历史人文 纪录片&历史、人文
-            if (contentType == "doc") and (u"历史" in tags or u"人文" in tags):
-                feed_tag.append(u"历史人文")
+            if (contentType == "doc") and ("历史" in tags or "人文" in tags):
+                feed_tag.append("历史人文")
             # 旅游天地 纪录片&旅游
-            if (contentType == "doc") and (u"旅游" in tags):
-                feed_tag.append(u"旅游天地")
+            if (contentType == "doc") and ("旅游" in tags):
+                feed_tag.append("旅游天地")
             # 儿童精品 少儿&合家欢
-            if (contentType == "kids") and (u"合家欢" in tags):
-                feed_tag.append(u"儿童精品")
+            if (contentType == "kids") and ("合家欢" in tags):
+                feed_tag.append("儿童精品")
             # 偶像爱情 电视剧&爱情、都市、偶像
-            if (contentType == "tv") and (u"爱情" in tags or u"都市" in tags or u"偶像" in tags):
-                feed_tag.append(u"偶像爱情")
+            if (contentType == "tv") and ("爱情" in tags or "都市" in tags or "偶像" in tags):
+                feed_tag.append("偶像爱情")
 
             doc["feed_tag"] = feed_tag
             self.logger.info('gen feed - %s - %s', sid, feed_tag)
@@ -416,56 +415,56 @@ class Album(VodHandler):
 
     def gen_mfield(self, sid, doc):
         try:
-            m_field = u""
+            m_field = ""
 
             title = jsonutils.get_value_with_default(doc, 'title', str)
             if title:
-                m_field += title + u" | "
+                m_field += title + " | "
 
             contentType = jsonutils.get_value_with_default(doc, 'contentType', str)
             if contentType and contentType in vod_datadict.contentType_dict:
-                m_field += vod_datadict.contentType_dict[contentType] + u" | "
+                m_field += vod_datadict.contentType_dict[contentType] + " | "
 
             tags = doc['tags']
             if tags:
                 for t in tags:
-                    m_field += t + u" | "
+                    m_field += t + " | "
 
             feed_tag = jsonutils.get_value_with_default(doc, 'feed_tag', list)
             if feed_tag:
                 for tag in feed_tag:
-                    m_field += tag + u" | "
+                    m_field += tag + " | "
 
             area = jsonutils.get_value_with_default(doc, 'area', str)
             if area:
-                m_field += area + u" | "
+                m_field += area + " | "
 
             brief = jsonutils.get_value_with_default(doc, 'brief', str)
             if brief:
-                m_field += brief + u" | "
+                m_field += brief + " | "
 
             information = jsonutils.get_value_with_default(doc, 'information', str)
             if information:
-                m_field += information + u" | "
+                m_field += information + " | "
 
             language = jsonutils.get_value_with_default(doc, 'language', str)
             if language:
-                m_field += language + u" | "
+                m_field += language + " | "
 
             name = jsonutils.get_value_with_default(doc, 'name', str)
             if name:
-                m_field += name + u" | "
+                m_field += name + " | "
 
             if 'persons' in doc and doc['persons']:
                 persons = doc['persons']
                 for person in persons:
                     person_name = person['personName']
                     if person_name:
-                        m_field += person_name + u" | "
+                        m_field += person_name + " | "
 
                     role_name = person['roleName']
                     if role_name:
-                        m_field += role_name + u" | "
+                        m_field += role_name + " | "
 
             doc['m_field'] = m_field
             self.logger.info('gen mfield - %s - %s', sid, m_field)
@@ -728,4 +727,4 @@ class Album(VodHandler):
 if __name__ == '__main__':
     faulthandler.enable()
 
-    Album(os.path.dirname(__file__)).start()
+    AlbumHandler(os.path.dirname(__file__)).start()
