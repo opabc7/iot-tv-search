@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import json
-from ..lib.utils import jsonutils
-import vod_datadict
+from lib.utils import jsonutils
+from . import vod_datadict
 
 def get_sereis_map(fpath):
     series_map = {}
