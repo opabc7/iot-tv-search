@@ -154,9 +154,9 @@ class Album(VodHandler):
         self.gen_title_digit_norm(sid, doc_plus)
         self.gen_baidu_tags(sid, doc_plus)
         self.gen_field_merge(sid, doc_plus)
-        self.gen_mtags()
-        self.gen_minfo()
-        self.gen_mtitle()
+        self.gen_mtags(sid, doc_plus)
+        self.gen_minfo(sid, doc_plus)
+        self.gen_mtitle(sid, doc_plus)
         self.remove_ghost_movie_tags(sid, doc_plus)
         self.gen_douban_data(sid, doc_plus)
 
@@ -606,14 +606,90 @@ class Album(VodHandler):
             self.logger.error('gen field_merge failed - %s', sid)
             self.logger.exception(e)
 
-    def gen_mtags(self):
-        pass
+    def gen_mtags(self, sid, doc):
+        try:
+            m_tags = []
 
-    def gen_minfo(self):
-        pass
+            tags = jsonutils.get_value_with_default(doc, "tags", list)
+            if len(tags):
+                m_tags += tags
 
-    def gen_mtitle(self):
-        pass
+            area = jsonutils.get_value_with_default(doc, "area", str)
+            if area:
+                m_tags += [area]
+
+            persons = jsonutils.get_value_with_default(doc, "persons.personName", list)
+            if len(persons):
+                m_tags += persons
+
+            language = jsonutils.get_value_with_default(doc, "language", str)
+            if language:
+                m_tags += [language]
+
+            contentType_mapping = jsonutils.get_value_with_default(doc, "merge_contentType_mapping", str)
+            if contentType_mapping:
+                m_tags += contentType_mapping.strip().split(" | ")
+
+            year = jsonutils.get_value_with_default(doc, "year", int)
+            year = str(year).strip()
+            if year:
+                m_tags += [year]
+
+            m_tags = list(set(m_tags))
+            doc["m_tags"] = " | ".join(m_tags)
+            self.logger.info('gen mtags - %s - %s', sid, doc["m_tags"])
+        except Exception as e:
+            self.logger.error('gen mtags failed - %s', sid)
+            self.logger.exception(e)
+
+    def gen_minfo(self, sid, doc):
+        try:
+            m_info = []
+
+            brief = jsonutils.get_value_with_default(doc, "brief", str)
+            if brief:
+                m_info.append(brief)
+
+            information = jsonutils.get_value_with_default(doc, "information", str)
+            if information:
+                m_info.append(information)
+
+            m_info = " | ".join(list(set(m_info)))
+            doc['m_info'] = m_info
+            self.logger.info('gen minfo - %s - %s', sid, doc['m_info'])
+        except Exception as e:
+            self.logger.error('gen minfo failed - %s', sid)
+            self.logger.exception(e)
+
+    def gen_mtitle(self, sid, doc):
+        try:
+            m_title = []
+
+            title = jsonutils.get_value_with_default(doc, "title", str)
+            if title and (not title in m_title):
+                m_title += [title]
+
+            subtitle = jsonutils.get_value_with_default(doc, "subtitle", str)
+            if subtitle and (not subtitle in m_title):
+                m_title += [subtitle]
+
+            name = jsonutils.get_value_with_default(doc, "name", str)
+            if name and (not name in m_title):
+                m_title += [name]
+
+            normalize_title = jsonutils.get_value_with_default(doc, "normalize_title", str)
+            if normalize_title and (not normalize_title in m_title):
+                m_title += normalize_title.strip().split(" | ")
+
+            if title and (not (title.lower() in m_title)):
+                m_title.append(title.lower())
+
+            m_title = list(set(m_title))
+            doc['m_title'] = " | ".join(m_title)
+            self.logger.info('gen mtitle - %s - %s', sid, doc['m_title'])
+        except Exception as e:
+            self.logger.error('gen mtitle failed - %s', sid)
+            self.logger.exception(e)
 
     def remove_ghost_movie_tags(self, sid, doc):
         try:
