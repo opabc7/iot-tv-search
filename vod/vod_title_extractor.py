@@ -94,8 +94,8 @@ class TitleExtractor():
         return None
 
     def parse_movie_season(self, title):
-        name = u""
-        season = u""
+        name = ""
+        season = ""
 
         m = movie_pattern.search(title)
         if m:
@@ -123,8 +123,8 @@ class TitleExtractor():
         return (name, season)
 
     def parse_quota_fields(self, title):
-        name = u""
-        season = u""
+        name = ""
+        season = ""
 
         subtitles = []
         m = quota_pattern.findall(title)
@@ -132,7 +132,7 @@ class TitleExtractor():
             for item in m:
                 subtitles.append(item[1])
 
-        main_title = u""
+        main_title = ""
         m = book_quota_pattern.search(title)
         if m:
             main_title = m.group(2).title()
@@ -142,7 +142,7 @@ class TitleExtractor():
         main_title_len = len(main_title)
         main_ratio = float(main_title_len) / float(title_len)
 
-        if self.contentType == u"doc" and title_len > 10 and main_ratio < 0.3:
+        if self.contentType == "doc" and title_len > 10 and main_ratio < 0.3:
             fields = re.split(doc_quota_spliter, title)
         else:
             fields = re.split(quota_spliter, title)
@@ -153,7 +153,7 @@ class TitleExtractor():
 
         fields_data = []
         for i in fields:
-            fields_data.append({"raw": i, "type": u"raw", "name": i, "season": u""})
+            fields_data.append({"raw": i, "type": "raw", "name": i, "season": ""})
 
         if len(fields) > 1:
             f_index = 0
@@ -162,7 +162,7 @@ class TitleExtractor():
                     if field == main_title:
                         # main title
                         fields_data[f_index]["season"] = season
-                        fields_data[f_index]["type"] = u"main_title"
+                        fields_data[f_index]["type"] = "main_title"
 
                         (name, season) = self.parse_comma_fields(field, title)
                         if name:
@@ -173,11 +173,11 @@ class TitleExtractor():
                         season = field
 
                         fields_data[f_index]["season"] = season
-                        fields_data[f_index]['type'] = u"season_numeric"
+                        fields_data[f_index]['type'] = "season_numeric"
                         fields_data[f_index]['name'] = field
                     elif field not in subtitles:
                         fields_data[f_index]["season"] = season
-                        fields_data[f_index]['type'] = u"main_title"
+                        fields_data[f_index]['type'] = "main_title"
 
                         (name, season) = self.parse_comma_fields(field, title)
                         if name:
@@ -190,14 +190,14 @@ class TitleExtractor():
                             season = m.group(1).title()
 
                             fields_data[f_index]["season"] = season
-                            fields_data[f_index]["type"] = u"season"
+                            fields_data[f_index]["type"] = "season"
                             fields_data[f_index]["name"] = field
-                            fields_data[f_index]["type"] = u"subtitle"
+                            fields_data[f_index]["type"] = "subtitle"
 
                 f_index += 1
 
-            name = u""
-            season = u""
+            name = ""
+            season = ""
             fields_data_sorted = sorted(fields_data, key=lambda s:name_type_pri[s["type"]], reverse=False)
             for item in fields_data_sorted:
                 if item["name"] and not name:
@@ -218,7 +218,7 @@ class TitleExtractor():
     def parse_comma_fields(self, block, title):
         # doc not split
         fields = re.split(comma_spliter, block)
-        if fields and self.contentType == u"doc":
+        if fields and self.contentType == "doc":
             field_len = len(fields[0])
             title_len = len(title)
             field_ratio = float(field_len) / float(title_len)
@@ -228,49 +228,49 @@ class TitleExtractor():
         fields_data = []
         f_num = len(fields)
         for i in fields:
-            fields_data.append({"raw": i, "type": u"raw", "name": i, "season": u""})
+            fields_data.append({"raw": i, "type": "raw", "name": i, "season": ""})
 
         f_index = 0
         for field in fields:
             m = season_pattern.search(field)
             if m:
-                fields_data[f_index]["type"] = u"season"
+                fields_data[f_index]["type"] = "season"
                 season = m.group(1).title()
                 fields_data[f_index]["season"] = season
 
                 m_whole = season_pattern_whole.search(title)
                 if m_whole:
                     name = m_whole.group(1).title()
-                    fields_data[f_index]["type"] = u"main_title"
+                    fields_data[f_index]["type"] = "main_title"
                     fields_data[f_index]["name"] = name
                 else:
                     m_suffix = season_pattern_whole.search(field)
                     if m_suffix:
                         name = m_suffix.group(1).title()
                         if name:
-                            fields_data[f_index]["type"] = u"season_whole"
+                            fields_data[f_index]["type"] = "season_whole"
                             fields_data[f_index]["name"] = name
                         else:
-                            fields_data[f_index]["type"] = u"season_whole"
-                            fields_data[f_index]["name"] = u""
+                            fields_data[f_index]["type"] = "season_whole"
+                            fields_data[f_index]["name"] = ""
                     else:
                         m_part = season_pattern_part.search(field)
                         if m_part:
                             name = m_part.group(1).title()
                             if name:
-                                fields_data[f_index]["type"] = u"season_part"
+                                fields_data[f_index]["type"] = "season_part"
                                 fields_data[f_index]["name"] = name
                             else:
-                                fields_data[f_index]["type"] = u"season_part"
-                                fields_data[f_index]["name"] = u""
+                                fields_data[f_index]["type"] = "season_part"
+                                fields_data[f_index]["name"] = ""
             elif field.isnumeric():
                 season = field
 
                 fields_data[f_index]["season"] = season
-                fields_data[f_index]['type'] = u"season_numeric"
+                fields_data[f_index]['type'] = "season_numeric"
                 fields_data[f_index]['name'] = field
             elif field.encode('utf-8').isalpha():
-                fields_data[f_index]['type'] = u"alpha"
+                fields_data[f_index]['type'] = "alpha"
                 fields_data[f_index]['name'] = field
             elif not field.isnumeric():
                 # prefix number field
@@ -279,7 +279,7 @@ class TitleExtractor():
                     season = m_num.group(1).title()
                     name = m_num.group(2).title()
 
-                    fields_data[f_index]["type"] = u"season_prefix"
+                    fields_data[f_index]["type"] = "season_prefix"
                     fields_data[f_index]["name"] = name
                     fields_data[f_index]["season"] = season
                 else:
@@ -291,18 +291,18 @@ class TitleExtractor():
 
                         fields_data[f_index]["name"] = name
                         fields_data[f_index]["season"] = season
-                        fields_data[f_index]["type"] = u"season_suffix"
+                        fields_data[f_index]["type"] = "season_suffix"
                     else:
                         m_subtitle = subtitle_pattern.search(field)
                         if m_subtitle:
-                            fields_data[f_index]["type"] = u"subtitle"
+                            fields_data[f_index]["type"] = "subtitle"
                             fields_data[f_index]["name"] = field
 
                         m_chn_subtitle = chn_subtitle_pattern.search(field)
                         if m_chn_subtitle:
                             name = m_chn_subtitle.group(1).title()
                             if len(name) > 1:
-                                fields_data[f_index]["type"] = u"chn_subtitle"
+                                fields_data[f_index]["type"] = "chn_subtitle"
                                 fields_data[f_index]["name"] = name
 
             f_index += 1
@@ -325,8 +325,8 @@ class TitleExtractor():
             else:
                 merge_fields_data.append(fields_data[i])
 
-        name = u""
-        season = u""
+        name = ""
+        season = ""
         fields_data_sorted = sorted(merge_fields_data, key=lambda s:name_type_pri[s["type"]], reverse=False)
         for item in fields_data_sorted:
             if item["name"] and not name:
