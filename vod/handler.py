@@ -19,7 +19,6 @@ class VodHandler:
         self.work_dir = work_dir
         self._id_field, self.title_field = _id_field, title_field
 
-        self.init_logger()
         self.init_config()
         self.init_config_task()
 
@@ -35,6 +34,10 @@ class VodHandler:
 
         config = configparser.RawConfigParser()
         config.read(fpath)
+
+        # config:log
+        os.environ['vod_log_root'] = config['log']['root']
+        self.init_logger()
         self.logger.info('config loaded.')
 
         # config:db
@@ -47,9 +50,6 @@ class VodHandler:
 
         # config:mq
         self.mq_addr = config['mq']['mq_addr']
-
-        # config:log
-        os.environ['vod_log_root'] = config['log']['root']
 
         # config:rocksdb
         self.rocksdb_config = {}
