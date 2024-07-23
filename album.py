@@ -26,7 +26,7 @@ class AlbumHandler(VodHandler):
         self.rocksclient_heat = RocksClient(self.rocksdb_path_heat)
         self.rocksclient_virtual_program = RocksClient(self.rocksdb_path_virtual_program)
 
-        added_dataloader = VodAddedDataloader(self.added_data_config)
+        added_dataloader = VodAddedDataloader(self.logger, self.added_data_config)
         self.series_map = added_dataloader.get_sereis_map()
         self.featuretype_map = added_dataloader.get_featuretype_map()
         self.title_digit_norm_map = added_dataloader.get_title_digit_norm_map()
