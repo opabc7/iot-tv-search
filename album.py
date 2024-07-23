@@ -9,9 +9,9 @@ from lib.rocksclient import RocksClient
 from lib.utils import jsonutils
 from vod.handler import VodHandler
 from vod.vod_title_extractor import TitleExtractor
+from vod.vod_added_dataloader import VodAddedDataloader
 from vod import vod_heat_gererator
 from vod import vod_datadict
-from vod import vod_added_dataloader
 
 featureType_pattern1 = r"花絮|精彩集锦|片段|彩蛋|预告|排行|首映礼|精彩看点|纪录片|特别纪录|混剪|名场面|周诌大电影"
 featureType_pattern2 = r"幕后"
@@ -26,28 +26,14 @@ class Album(VodHandler):
         self.rocksclient_heat = RocksClient(self.rocksdb_path_heat)
         self.rocksclient_virtual_program = RocksClient(self.rocksdb_path_virtual_program)
 
-        added_data_root = self.added_data_config['root']
-        self.series_map = vod_added_dataloader.get_sereis_map(os.path.join(added_data_root, self.added_data_config['series_map']))
-        self.logger.info('added_data loaded - series_map - %s', len(self.series_map))
-
-        self.featuretype_map = vod_added_dataloader.get_featuretype_map(os.path.join(added_data_root, self.added_data_config['feature_type_map']))
-        self.logger.info('added_data loaded - featuretype_map - %s', len(self.featuretype_map))
-
-        self.title_digit_norm_map = vod_added_dataloader.get_title_digit_norm_map(os.path.join(added_data_root, self.added_data_config['title_digit_norm']))
-        self.logger.info('added_data loaded - title_digit_norm_map - %s', len(self.title_digit_norm_map))
-
-        self.baidu_tags_map = vod_added_dataloader.get_baidu_tags_map(os.path.join(added_data_root, self.added_data_config['sid_baidu_tags']))
-        self.logger.info('added_data loaded - baidu_tags_map - %s', len(self.baidu_tags_map))
-
-        self.ghost_tags_map = vod_added_dataloader.get_ghost_tags_map(os.path.join(added_data_root, self.added_data_config['ghost_film_error_tags']))
-        self.logger.info('added_data loaded - ghost_tags_map - %s', len(self.ghost_tags_map))
-
-        self.douban_map = vod_added_dataloader.get_douban_map(os.path.join(added_data_root, self.added_data_config['douban_scores']))
-        self.logger.info('added_data loaded - douban_map - %s', len(self.douban_map))
-
-        self.field_merge_map = vod_added_dataloader.get_field_merge_map(os.path.join(added_data_root, self.added_data_config['virtual_path']),
-                                                                        os.path.join(added_data_root, self.added_data_config['album_path']))
-        self.logger.info('added_data loaded - field_merge_map - %s', len(self.field_merge_map))
+        added_dataloader = VodAddedDataloader(self.added_data_config)
+        self.series_map = added_dataloader.get_sereis_map()
+        self.featuretype_map = added_dataloader.get_featuretype_map()
+        self.title_digit_norm_map = added_dataloader.get_title_digit_norm_map()
+        self.baidu_tags_map = added_dataloader.get_baidu_tags_map()
+        self.ghost_tags_map = added_dataloader.get_ghost_tags_map()
+        self.douban_map = added_dataloader.get_douban_map()
+        self.field_merge_map = added_dataloader.get_field_merge_map()
 
     def init_config_task(self):
         task_config = VodHandler.init_config_task(self)
