@@ -56,10 +56,10 @@ class VodHandler:
         for key in config['rocksdb']:
             self.rocksdb_config[key] = config['rocksdb'][key]
 
-        # config:ext_data
-        self.ext_data_config = {}
-        for key in config['ext_data']:
-            self.ext_data_config[key] = config['ext_data'][key]
+        # config:added_data
+        self.added_data_config = {}
+        for key in config['added_data']:
+            self.added_data_config[key] = config['added_data'][key]
 
     def init_config_task(self):
         fpath = os.path.join(self.work_dir, 'conf', self.task, 'config.ini')

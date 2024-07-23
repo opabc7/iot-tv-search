@@ -4,12 +4,17 @@ import faulthandler
 import os
 import time
 import demjson3
+import re
 from lib.rocksclient import RocksClient
 from lib.utils import jsonutils
 from vod.handler import VodHandler
 from vod.vod_title_extractor import TitleExtractor
 from vod import vod_heat_gererator
 from vod import vod_datadict
+from vod import vod_added_dataloader
+
+featureType_pattern1 = r"花絮|精彩集锦|片段|彩蛋|预告|排行|首映礼|精彩看点|纪录片|特别纪录|混剪|名场面|周诌大电影"
+featureType_pattern2 = r"幕后"
 
 class Album(VodHandler):
 
@@ -20,6 +25,16 @@ class Album(VodHandler):
 
         self.rocksclient_heat = RocksClient(self.rocksdb_path_heat)
         self.rocksclient_virtual_program = RocksClient(self.rocksdb_path_virtual_program)
+
+        added_data_root = self.added_data_config['root']
+        self.series_map = vod_added_dataloader.get_sereis_map(os.path.join(added_data_root, self.added_data_config['series_map']))
+        self.featuretype_map = vod_added_dataloader.get_featuretype_map(os.path.join(added_data_root, self.added_data_config['feature_type_map']))
+        self.title_digit_norm_map = vod_added_dataloader.get_title_digit_norm_map(os.path.join(added_data_root, self.added_data_config['title_digit_norm']))
+        self.baidu_tags_map = vod_added_dataloader.get_baidu_tags_map(os.path.join(added_data_root, self.added_data_config['sid_baidu_tags']))
+        self.ghost_tags_map = vod_added_dataloader.get_ghost_tags_map(os.path.join(added_data_root, self.added_data_config['ghost_film_error_tags']))
+        self.douban_map = vod_added_dataloader.get_douban_map(os.path.join(added_data_root, self.added_data_config['douban_scores']))
+        self.field_merge_map = vod_added_dataloader.get_field_merge_map(os.path.join(added_data_root, self.added_data_config['virtual_path']),
+                                                                        os.path.join(added_data_root, self.added_data_config['album_path']))
 
     def init_config_task(self):
         task_config = VodHandler.init_config_task(self)
@@ -134,16 +149,16 @@ class Album(VodHandler):
         self.gen_virtual(sid, doc_plus)
         self.gen_season(sid, doc_plus)
         self.gen_mfield(sid, doc_plus)
-        self.gen_series()
-        self.gen_featureType()
-        self.gen_title_digit_norm()
-        self.gen_baidu_tags()
-        self.gen_field_merge()
+        self.gen_series(sid, doc_plus)
+        self.gen_featureType(sid, doc_plus)
+        self.gen_title_digit_norm(sid, doc_plus)
+        self.gen_baidu_tags(sid, doc_plus)
+        self.gen_field_merge(sid, doc_plus)
         self.gen_mtags()
         self.gen_minfo()
         self.gen_mtitle()
-        self.remove_ghost_movie_tags()
-        self.gen_douban_data()
+        self.remove_ghost_movie_tags(sid, doc_plus)
+        self.gen_douban_data(sid, doc_plus)
 
         return doc_plus
 
@@ -459,20 +474,137 @@ class Album(VodHandler):
             self.logger.error('gen mfield failed - %s', sid)
             self.logger.exception(e)
 
-    def gen_series(self):
-        pass
+    def gen_series(self, sid, doc):
+        try:
+            if sid in self.series_map:
+                series_name = self.series_map[sid]['series_name']
+                series_rank = self.series_map[sid]['series_rank']
+            else:
+                series_name = ""
+                series_rank = -1
 
-    def gen_featureType(self):
-        pass
+            doc['series_name'] = series_name
+            doc['series_rank'] = int(series_rank)
+            self.logger.info('gen series - %s - %s - %s', sid, series_name, series_rank)
+        except Exception as e:
+            self.logger.error('gen series failed - %s', sid)
+            self.logger.exception(e)
 
-    def gen_title_digit_norm(self):
-        pass
+    def gen_featureType(self, sid, doc):
+        try:
+            newFeatureType = None
 
-    def gen_baidu_tags(self):
-        pass
+            status = doc["status"]
+            if status == 1:
+                if sid in self.featuretype_map:
+                    newFeatureType = self.featuretype_map[sid]
+                else:
+                    featureType = doc["featureType"]
 
-    def gen_field_merge(self):
-        pass
+                    if featureType == 1:
+                        contentType = doc["contentType"]
+
+                        if contentType in ("movie", "tv", "comic", "show", "child", "kids", "doc", "edu"):
+                            source = jsonutils.get_value_with_default(doc, "source", str).strip()
+                            sourceScore = jsonutils.get_value_with_default(doc, "sourceScore", int)
+                            episode = jsonutils.get_value_with_default(doc, "episode", int)
+                            year = jsonutils.get_value_with_default(doc, "year", int)
+
+                            if (contentType == "doc" or contentType == "show") and source == "iqiyi" and (sourceScore is None or sourceScore < 0.01):
+                                newFeatureType = 5
+                            elif episode == 1 and (year is None or year == 0) and (sourceScore is None or sourceScore < 0.01):
+                                newFeatureType = 5
+                        elif contentType in ("movie", "tv", "comic", "show", "child", "kids"):
+                            title = doc["title"]
+                            source = jsonutils.get_value_with_default(doc, "source", str).strip()
+                            episode = jsonutils.get_value_with_default(doc, "episode", int)
+                            duration = jsonutils.get_value_with_default(doc, "duration", int)
+                            verticalIcon = jsonutils.get_value_with_default(doc, "verticalIcon", str).strip()
+
+                            if re.search(featureType_pattern1, title):
+                                if title not in ("预告犯", "业余纪录片"):
+                                    newFeatureType = 5
+                            elif re.search(featureType_pattern2, title) and "《" in title:
+                                newFeatureType = 5
+                            elif not verticalIcon:
+                                newFeatureType = 5
+                            elif contentType == "movie" and source == "youku" and episode == 0:
+                                newFeatureType = 5
+                            elif contentType == "movie" and source == "iqiyi" and duration < 600:
+                                newFeatureType = 5
+
+            if newFeatureType:
+                doc["featureType"] = newFeatureType
+                self.logger.info('gen featureType - %s - %s', sid, newFeatureType)
+        except Exception as e:
+            self.logger.error('gen featureType failed - %s', sid)
+            self.logger.exception(e)
+
+    def gen_title_digit_norm(self, sid, doc):
+        try:
+            if sid in self.title_digit_norm_map:
+                normalize_title = self.title_digit_norm_map[sid].strip().split("|")
+                normalize_title = " | ".join(normalize_title)
+            else:
+                normalize_title = ""
+
+            doc["normalize_title"] = normalize_title
+            self.logger.info('gen title_digit_norm - %s - %s', sid, normalize_title)
+        except Exception as e:
+            self.logger.error('gen title_digit_norm failed - %s', sid)
+            self.logger.exception(e)
+
+    def gen_baidu_tags(self, sid, doc):
+        try:
+            if sid in self.baidu_tags_map:
+                baidu_tags = self.baidu_tags_map[sid]
+                baidu_tags = " | ".join(baidu_tags)
+            else:
+                baidu_tags = ""
+
+            doc["baidu_tags"] = baidu_tags
+            self.logger.info('gen baidu_tags - %s - %s', sid, baidu_tags)
+        except Exception as e:
+            self.logger.error('gen baidu_tags failed - %s', sid)
+            self.logger.exception(e)
+
+    def gen_field_merge(self, sid, doc):
+        ''' 
+        增加字段 merge_tags、merge_area、merge_personsName、merge_language、merge_contentType_mapping、merge_year
+        '''
+        try:
+            if sid in self.field_merge_map:
+                field_merge_info = self.field_merge_map[sid]
+
+                merge_tags = jsonutils.get_value_with_default(field_merge_info, "merge_tags", list)
+                if len(merge_tags):
+                    doc['merge_tags'] = " | ".join(merge_tags)
+
+                merge_area = jsonutils.get_value_with_default(field_merge_info, "merge_area", list)
+                if len(merge_area):
+                    doc['merge_area'] = merge_area
+
+                merge_personsName = jsonutils.get_value_with_default(field_merge_info, "merge_personsName", list)
+                if len(merge_personsName):
+                    doc['merge_personsName'] = " | ".join(merge_personsName)
+
+                merge_language = jsonutils.get_value_with_default(field_merge_info, "merge_language", list)
+                if len(merge_language):
+                    doc['merge_language'] = " | ".join(merge_language)
+
+                merge_contentType_mapping = jsonutils.get_value_with_default(field_merge_info, "merge_contentType_mapping", list)
+                if len(merge_contentType_mapping):
+                    doc['merge_contentType_mapping'] = " | ".join(merge_contentType_mapping)
+
+                merge_year = jsonutils.get_value_with_default(field_merge_info, "merge_year", list)
+                if len(merge_year):
+                    doc['merge_year'] = merge_year
+
+            self.logger.info('gen field_merge - %s - %s - %s - %s - %s - %s - %s', sid, doc['merge_tags'], doc['merge_area'],
+                             doc['merge_personsName'], doc['merge_language'], doc['merge_contentType_mapping'], doc['merge_year'])
+        except Exception as e:
+            self.logger.error('gen field_merge failed - %s', sid)
+            self.logger.exception(e)
 
     def gen_mtags(self):
         pass
@@ -483,11 +615,40 @@ class Album(VodHandler):
     def gen_mtitle(self):
         pass
 
-    def remove_ghost_movie_tags(self):
-        pass
+    def remove_ghost_movie_tags(self, sid, doc):
+        try:
+            tags = jsonutils.get_value_with_default(doc, "tags", list)
+            if sid in self.ghost_tags_map:
+                for t in self.ghost_tags_map[sid]:
+                    if t in tags:
+                        tags.remove(t)
 
-    def gen_douban_data(self):
-        pass
+            doc["tags"] = tags
+            self.logger.info('gen ghost_movie_tags - %s - %s', sid, tags)
+        except Exception as e:
+            self.logger.error('gen ghost_movie_tags failed - %s', sid)
+            self.logger.exception(e)
+
+    def gen_douban_data(self, sid, doc):
+        try:
+            if sid in self.douban_map:
+                (tags, douban_comment_cnt, douban_score, douban_hot) = self.douban_map[sid]
+
+                douban_tags = "|".join(tags)
+            else:
+                douban_tags = ""
+                douban_comment_cnt = 0
+                douban_score = 0.0
+                douban_hot = 0.0
+
+            doc["douban_tags"] = douban_tags
+            doc["douban_comment_cnt"] = douban_comment_cnt
+            doc["douban_score"] = douban_score
+            doc["douban_hot"] = douban_hot
+            self.logger.info('gen douban_data - %s - %s', sid, douban_tags, douban_comment_cnt, douban_score, douban_hot)
+        except Exception as e:
+            self.logger.error('gen douban_data failed - %s', sid)
+            self.logger.exception(e)
 
 if __name__ == '__main__':
     faulthandler.enable()

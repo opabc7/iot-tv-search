@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import re
-from ..lib.utils import mathutils
+from lib.utils import mathutils
 
 name_type_pri = {
     "main_title": 0,
