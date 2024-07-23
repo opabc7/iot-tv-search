@@ -3,7 +3,7 @@
 task=$1
 
 case "$task" in
-    album|person|virtual_program|album_heat)
+    album|person|virtual_program|heat)
         echo "task:    ${task}"
     ;;
     *)
