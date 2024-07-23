@@ -5,10 +5,10 @@ import os
 from vod.handler import VodHandler
 from lib.rocksclient import RocksClient
 
-class AlbumHeat(VodHandler):
+class HeatHandler(VodHandler):
 
     def __init__(self, work_dir):
-        self.task = os.environ['vod_task'] = 'album_heat'
+        self.task = os.environ['vod_task'] = 'heat'
 
         VodHandler.__init__(self, work_dir, 'sid', None)
 
@@ -27,4 +27,4 @@ class AlbumHeat(VodHandler):
 if __name__ == '__main__':
     faulthandler.enable()
 
-    AlbumHeat(os.path.dirname(__file__)).start()
+    HeatHandler(os.path.dirname(__file__)).start()
