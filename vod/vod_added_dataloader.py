@@ -74,36 +74,39 @@ def get_douban_map(fpath):
 
     with open(fpath, 'r') as f:
         for line in f:
-            line = line.strip()
-            cols = line.split('\t')
+            try:
+                line = line.strip()
+                cols = line.split('\t')
 
-            sid = cols[0]
+                sid = cols[0]
 
-            tags_line = cols[2]
-            if tags_line:
-                tags = tags_line.strip().split(',')
-            else:
-                tags = []
+                tags_line = cols[2]
+                if tags_line:
+                    tags = tags_line.strip().split(',')
+                else:
+                    tags = []
 
-            comment_cnt = cols[3]
-            if not comment_cnt:
-                comment_cnt = 0
-            else:
-                comment_cnt = int(comment_cnt)
+                comment_cnt = cols[3]
+                if not comment_cnt:
+                    comment_cnt = 0
+                else:
+                    comment_cnt = int(comment_cnt)
 
-            score = cols[4]
-            if not score:
-                score = 0.0
-            else:
-                score = float(score)
+                score = cols[4]
+                if not score:
+                    score = 0.0
+                else:
+                    score = float(score)
 
-            hot = cols[5]
-            if not hot:
-                hot = 0.0
-            else:
-                hot = float(hot)
+                hot = cols[5]
+                if not hot:
+                    hot = 0.0
+                else:
+                    hot = float(hot)
 
-            douban_map[sid] = (tags, comment_cnt, score, hot)
+                douban_map[sid] = (tags, comment_cnt, score, hot)
+            except Exception as e:
+                print(e)
 
     return douban_map
 
