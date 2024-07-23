@@ -11,7 +11,7 @@ import json
 import pymysql.cursors
 import threading
 
-class Vod:
+class VodHandler:
 
     def __init__(self, work_dir, _id_field, title_field):
         self.db_connections = {}
@@ -102,6 +102,7 @@ class Vod:
         except Exception as e:
             self.logger.error('failed message - %s', msg)
             self.logger.exception(e)
+
             return ConsumeStatus.RECONSUME_LATER
 
     def process_doc(self, doc):
@@ -139,14 +140,15 @@ class Vod:
         pass
 
     def start(self):
-        mq_consumer = PushConsumer(self.mq_consumer_id)
-        mq_consumer.set_name_server_address(self.mq_addr)
-        mq_consumer.subscribe(self.mq_topic, self.handle_mq)
-        mq_consumer.start()
-        self.logger.info('started to listen to mq: %s/%s/%s', self.mq_addr, self.mq_consumer_id, self.mq_topic)
+        try:
+            mq_consumer = PushConsumer(self.mq_consumer_id)
+            mq_consumer.set_name_server_address(self.mq_addr)
+            mq_consumer.subscribe(self.mq_topic, self.handle_mq)
+            mq_consumer.start()
+            self.logger.info('started to listen to mq: %s/%s/%s', self.mq_addr, self.mq_consumer_id, self.mq_topic)
 
-        while True:
-            self.logger.info('listening to mq: %s/%s/%s', self.mq_addr, self.mq_consumer_id, self.mq_topic)
-            time.sleep(30)
-
-        mq_consumer.shutdown()
+            while True:
+                self.logger.info('listening to mq: %s/%s/%s', self.mq_addr, self.mq_consumer_id, self.mq_topic)
+                time.sleep(30)
+        finally:
+            mq_consumer.shutdown()

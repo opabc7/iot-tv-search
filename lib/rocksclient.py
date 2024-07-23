@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
 import rocksdb
-import os, sys
 
 class RocksClient:
 
@@ -11,7 +11,7 @@ class RocksClient:
         else:
             self.db = rocksdb.DB(path, rocksdb.Options(create_if_missing=True), read_only=True)
 
-    def str2bytes(self, data):
+    def _str2bytes(self, data):
         if isinstance(data, bytes):
             return data
         elif isinstance(data, str):
@@ -20,13 +20,13 @@ class RocksClient:
             return bytes(str(data), 'utf8')
 
     def put(self, _id, doc):
-        self.db.put(self.str2bytes(_id), self.str2bytes(doc))
+        self.db.put(self._str2bytes(_id), self._str2bytes(doc))
 
     def get(self, _id):
-        return self.db.get(self.str2bytes(_id))
+        return self.db.get(self._str2bytes(_id))
 
     def delete(self, _id):
-        self.db.delete(self.str2bytes(_id))
+        self.db.delete(self._str2bytes(_id))
 
 if __name__ == "__main__":
     rocksclient = RocksClient(sys.argv[1])

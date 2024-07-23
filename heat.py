@@ -2,20 +2,20 @@
 
 import faulthandler
 import os
-from vod.base import Vod
+from vod.handler import VodHandler
 from lib.rocksclient import RocksClient
 
-class AlbumHeat(Vod):
+class AlbumHeat(VodHandler):
 
     def __init__(self, work_dir):
         self.task = os.environ['vod_task'] = 'album_heat'
 
-        Vod.__init__(self, work_dir, 'sid', None)
+        VodHandler.__init__(self, work_dir, 'sid', None)
 
         self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
 
     def init_config_task(self):
-        task_config = Vod.init_config_task(self)
+        task_config = VodHandler.init_config_task(self)
 
         # config:task:rocksdb
         self.rocksdb_path = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[self.task])

@@ -1,59 +1,57 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 import re
-from . import chn_processor
+from ..lib.utils import mathutils
 
 name_type_pri = {
-    u"main_title": 0,
-    u"chn_subtitle": 0,
-    u"alpha": 1,
-    u"season_whole": 3,
-    u"season_part": 3,
-    u"season_prefix": 3,
-    u"season_suffix": 3,
-    u"season": 6,
-    u"raw": 6,
-    u"season_numeric": 9,
-    u"subtitle" : 10,
+    "main_title": 0,
+    "chn_subtitle": 0,
+    "alpha": 1,
+    "season_whole": 3,
+    "season_part": 3,
+    "season_prefix": 3,
+    "season_suffix": 3,
+    "season": 6,
+    "raw": 6,
+    "season_numeric": 9,
+    "subtitle" : 10,
 }
 
 # xxxN:, xxxN：, xxxN(), xxxN（）
-movie_pattern = re.compile(u'(.*\D{2})(\d)[ :\uff1a (（](.*)[)）]?')
+movie_pattern = re.compile('(.*\D{2})(\d)[ :\uff1a (（](.*)[)）]?')
 # xxxN
-movie_pattern1 = re.compile(u'(.*\D{2})([1-2][0-9]|[1-9])$')
+movie_pattern1 = re.compile('(.*\D{2})([1-2][0-9]|[1-9])$')
 # xxx:, xxx：, xxx(), xxx（）
-movie_pattern2 = re.compile(u'(.*)[:\uff1a(（](.*)[)）]?')
+movie_pattern2 = re.compile('(.*)[:\uff1a(（](.*)[)）]?')
 # 第N季期部
-season_pattern = re.compile(u'第([0-9零一二两三四五六七八九十]+)[\u5b63\u90e8\u671f]')
+season_pattern = re.compile('第([0-9零一二两三四五六七八九十]+)[\u5b63\u90e8\u671f]')
 # xxx第N季期部$
-season_pattern_whole = re.compile(u'(.*?)[\(\uff08]?第([0-9零一二两三四五六七八九十]+)[\u5b63\u90e8\u671f][\)\uff09]?$')
+season_pattern_whole = re.compile('(.*?)[\(\uff08]?第([0-9零一二两三四五六七八九十]+)[\u5b63\u90e8\u671f][\)\uff09]?$')
 # xxx第N季期部xx
-season_pattern_part = re.compile(u'(.*?)[\(\uff08]?第([0-9零一二两三四五六七八九十]+)[\u5b63\u90e8\u671f][\)\uff09]?')
+season_pattern_part = re.compile('(.*?)[\(\uff08]?第([0-9零一二两三四五六七八九十]+)[\u5b63\u90e8\u671f][\)\uff09]?')
 # NNNN季期部年xxxx
-number_pattern_prefix = re.compile(u'^(\d{4,8})[\u5b63\u90e8\u671f\u5e74]?(\D*)$')
+number_pattern_prefix = re.compile('^(\d{4,8})[\u5b63\u90e8\u671f\u5e74]?(\D*)$')
 # xxxxNNNN季期部年
-number_pattern_suffix = re.compile(u'(.*?)(\d{4,8})[\u5b63\u90e8\u671f\u5e74]?$')
+number_pattern_suffix = re.compile('(.*?)(\d{4,8})[\u5b63\u90e8\u671f\u5e74]?$')
 # [xxx] 《xxx》 【xxx】 <xxxx>
-quota_pattern = re.compile(u'(.*?)[<《\[【](.*?)[>》\]】](.*?)')
+quota_pattern = re.compile('(.*?)[<《\[【](.*?)[>》\]】](.*?)')
 # 《xxx》
-book_quota_pattern = re.compile(u'(.*?)[《](.*?)[》](.*?)')
+book_quota_pattern = re.compile('(.*?)[《](.*?)[》](.*?)')
 # xxx xxx版
-subtitle_pattern = re.compile(u'(.*?)\u7248$')
+subtitle_pattern = re.compile('(.*?)\u7248$')
 # xx之xxx
-chn_subtitle_pattern = re.compile(u'(.*?)\u4e4b(.){2}')
+chn_subtitle_pattern = re.compile('(.*?)\u4e4b(.){2}')
 full_quota_patterns = [
-    re.compile(u'^《(.*?)》$'),
-    re.compile(u'^\[(.*?)\]$'),
-    re.compile(u'^<(.*?)>$'),
+    re.compile('^《(.*?)》$'),
+    re.compile('^\[(.*?)\]$'),
+    re.compile('^<(.*?)>$'),
 ]
-quota_spliter = u'\[|\]|《|》|<|>|【|】'
-doc_quota_spliter = u'\[|\]|<|>|【|】'
-comma_spliter = u' |:|\uff1a|\|'
+quota_spliter = '\[|\]|《|》|<|>|【|】'
+doc_quota_spliter = '\[|\]|<|>|【|】'
+comma_spliter = ' |:|\uff1a|\|'
 
-class AlbumExtractor():
-    """ album data extractor """
+class TitleExtractor():
+    """ title extractor """
 
     def __init__(self, title, contentType):
         self.title = title
@@ -85,7 +83,7 @@ class AlbumExtractor():
             self.name = title
 
         if self.season:
-            self.season_num = chn_processor.unicode_to_int(self.season)
+            self.season_num = mathutils.unicode_to_int(self.season)
 
     def parse_full_quota(self, title):
         for pattern in full_quota_patterns:

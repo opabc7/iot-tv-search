@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-import json
 import time
 
-def process_tencent(data):
+def get(source, data):
+    if source == "tencent":
+        score = _get_tencent(data)
+    elif source == "youku":
+        score = _get_youku(data)
+    elif source == "iqiyi":
+        score = _get_iqiyi(data)
+    elif source == "bilibili":
+        score = _get_bilibili(data)
+    elif source == "mgtv":
+        score = _get_mgtv(data)
+    else:
+        score = 0.0
+
+    return score
+
+def _get_tencent(data):
     score = 0.0
     if 'score' in data and data['score']:
         score = data['score']
@@ -26,7 +39,7 @@ def process_tencent(data):
 
     return score
 
-def process_youku(data):
+def _get_youku(data):
     score = 0.0
     if 'score' in data and data['score']:
         score = data['score']
@@ -41,7 +54,7 @@ def process_youku(data):
 
     return score
 
-def process_iqiyi(data):
+def _get_iqiyi(data):
     score = 0.0
     if 'score' in data and data['score']:
         score = data['score']
@@ -56,7 +69,7 @@ def process_iqiyi(data):
 
     return score
 
-def process_bilibili(data):
+def _get_bilibili(data):
     score = 0.0
     if 'score' in data and data['score']:
         score = data['score']
@@ -72,7 +85,7 @@ def process_bilibili(data):
 
     return score
 
-def process_mgtv(data):
+def _get_mgtv(data):
     score = 0.0
     if 'score' in data and data['score']:
         score = data['score']

@@ -2,28 +2,27 @@
 
 import faulthandler
 import os
-from vod.base import Vod
 import time
-from lib.rocksclient import RocksClient
-import json
-from lib import processHot
 import demjson3
-from lib.album_extractor import AlbumExtractor
-from lib import utils
-from lib import constants
+from lib.rocksclient import RocksClient
+from lib.utils import jsonutils
+from vod.handler import VodHandler
+from vod.vod_title_extractor import TitleExtractor
+from vod import vod_heat_gererator
+from vod import vod_datadict
 
-class Album(Vod):
+class Album(VodHandler):
 
     def __init__(self, work_dir):
         self.task = os.environ['vod_task'] = 'album'
 
-        Vod.__init__(self, work_dir, 'sid', 'title')
+        VodHandler.__init__(self, work_dir, 'sid', 'title')
 
         self.rocksclient_heat = RocksClient(self.rocksdb_path_heat)
         self.rocksclient_virtual_program = RocksClient(self.rocksdb_path_virtual_program)
 
     def init_config_task(self):
-        task_config = Vod.init_config_task(self)
+        task_config = VodHandler.init_config_task(self)
 
         # config:task:rocksdb
         self.rocksdb_path_heat = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[task_config['rocksdb']['heat']])
@@ -182,13 +181,6 @@ class Album(Vod):
             return "2020-01-01 00:00:00"
 
     def gen_roles(self, sid, doc):
-        roles = {
-            1 : "导演",
-            2 : "演员",
-            3 : "编剧",
-            4 : "制片人",
-        }
-
         doc['stars'] = []
         doc['directors'] = []
         if 'persons.personName' not in doc or 'persons.roleType' not in doc:
@@ -327,18 +319,7 @@ class Album(Vod):
                 playNum = hot_info['playNum']
 
                 if 'source' in hot_info:
-                    if hot_info['source'] == "tencent":
-                        score = processHot.process_tencent(hot_info)
-                    elif hot_info['source'] == "youku":
-                        score = processHot.process_youku(hot_info)
-                    elif hot_info['source'] == "iqiyi":
-                        score = processHot.process_iqiyi(hot_info)
-                    elif hot_info['source'] == "bilibili":
-                        score = processHot.process_bilibili(hot_info)
-                    elif hot_info['source'] == "mgtv":
-                        score = processHot.process_mgtv(hot_info)
-                    else:
-                        score = 0.0
+                    score = vod_heat_gererator.get(hot_info['source'], hot_info)
                 else:
                     score = 0.0
 
@@ -369,8 +350,8 @@ class Album(Vod):
 
             pri_this = 0
             src_this = doc['copyrightCode']
-            if src_this in constants.source_priority:
-                pri_this = constants.source_priority[src_this]
+            if src_this in vod_datadict.source_priority:
+                pri_this = vod_datadict.source_priority[src_this]
 
             hasBigger = False
             programs = virtual_info['virtualProgramRelList']
@@ -384,8 +365,8 @@ class Album(Vod):
                     continue
 
                 pri_other = 0
-                if src_other in constants.source_priority:
-                    pri_other = constants.source_priority[src_other]
+                if src_other in vod_datadict.source_priority:
+                    pri_other = vod_datadict.source_priority[src_other]
 
                 if pri_other > pri_this:
                     hasBigger = True
@@ -404,11 +385,11 @@ class Album(Vod):
 
     def gen_season(self, sid, doc):
         try:
-            extractor = AlbumExtractor(doc['title'], doc['contentType'])
-            extractor.parse_name_season()
+            title_extractor = TitleExtractor(doc['title'], doc['contentType'])
+            title_extractor.parse_name_season()
 
-            name = extractor.get_name()
-            season = extractor.get_season()
+            name = title_extractor.get_name()
+            season = title_extractor.get_season()
             if season >= 2 ** 31 - 1:
                 season = -1
 
@@ -423,41 +404,41 @@ class Album(Vod):
         try:
             m_field = u""
 
-            title = utils.get_value_with_default(doc, 'title', str)
+            title = jsonutils.get_value_with_default(doc, 'title', str)
             if title:
                 m_field += title + u" | "
 
-            contentType = utils.get_value_with_default(doc, 'contentType', str)
-            if contentType and contentType in constants.contentType_dict:
-                m_field += constants.contentType_dict[contentType] + u" | "
+            contentType = jsonutils.get_value_with_default(doc, 'contentType', str)
+            if contentType and contentType in vod_datadict.contentType_dict:
+                m_field += vod_datadict.contentType_dict[contentType] + u" | "
 
             tags = doc['tags']
             if tags:
                 for t in tags:
                     m_field += t + u" | "
 
-            feed_tag = utils.get_value_with_default(doc, 'feed_tag', list)
+            feed_tag = jsonutils.get_value_with_default(doc, 'feed_tag', list)
             if feed_tag:
                 for tag in feed_tag:
                     m_field += tag + u" | "
 
-            area = utils.get_value_with_default(doc, 'area', str)
+            area = jsonutils.get_value_with_default(doc, 'area', str)
             if area:
                 m_field += area + u" | "
 
-            brief = utils.get_value_with_default(doc, 'brief', str)
+            brief = jsonutils.get_value_with_default(doc, 'brief', str)
             if brief:
                 m_field += brief + u" | "
 
-            information = utils.get_value_with_default(doc, 'information', str)
+            information = jsonutils.get_value_with_default(doc, 'information', str)
             if information:
                 m_field += information + u" | "
 
-            language = utils.get_value_with_default(doc, 'language', str)
+            language = jsonutils.get_value_with_default(doc, 'language', str)
             if language:
                 m_field += language + u" | "
 
-            name = utils.get_value_with_default(doc, 'name', str)
+            name = jsonutils.get_value_with_default(doc, 'name', str)
             if name:
                 m_field += name + u" | "
 
