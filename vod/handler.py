@@ -128,10 +128,10 @@ class VodHandler:
         _time = int(time.time() * 1000)
         with db_connection.cursor() as db_cursor:
             if for_update:
-                db_cursor.execute(self.doc_sql_update, (body, _time, _id))
+                db_cursor.execute(self.doc_sql_update, (body, body_plus, _time, _id))
                 self.logger.info('db update - %s - %s', _id, title)
             else:
-                db_cursor.execute(self.doc_sql_insert, (_id, body, _time))
+                db_cursor.execute(self.doc_sql_insert, (_id, body, body_plus, _time))
                 self.logger.info('db insert - %s - %s', _id, title)
 
         db_connection.commit()
