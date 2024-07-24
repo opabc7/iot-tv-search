@@ -15,7 +15,7 @@ class HeatHandler(VodHandler):
         self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
 
     def init_config_task(self):
-        task_config = VodHandler.init_config_task(self)
+        # task_config = VodHandler.init_config_task(self)
 
         # config:task:rocksdb
         self.rocksdb_path = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[self.task])

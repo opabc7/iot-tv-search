@@ -4,6 +4,8 @@ import faulthandler
 import os
 from vod.handler import VodHandler
 from lib.rocksclient import RocksClient
+from elasticsearch import Elasticsearch
+from mappings import vod_person_mapping
 
 class PersonHandler(VodHandler):
 
@@ -14,8 +16,18 @@ class PersonHandler(VodHandler):
 
         self.rocksclient = RocksClient(self.rocksdb_path, 'rw')
 
+        self.es = Elasticsearch(self.es_hosts)
+        if self.es.indices.exists(index = self.index_name):
+            self.logger.info("search index %s has already existed.", self.index_name)
+        else:
+            es_res = self.es.indices.create(index = self.index_name, mappings = vod_person_mapping.mappings)
+            self.logger.info("search index created, result: %s", es_res)
+
     def init_config_task(self):
         task_config = VodHandler.init_config_task(self)
+
+        # config:task:es
+        self.index_name = task_config['es']['index_name']
 
         # config:task:rocksdb
         self.rocksdb_path = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[self.task])
@@ -88,6 +100,13 @@ class PersonHandler(VodHandler):
     def write_plus(self, _id, title, body_plus, doc_plus):
         self.rocksclient.put(_id, body_plus)
         self.logger.info('rocks put - %s', body_plus)
+
+        try:
+            es_res = self.es.index(index = self.index_name, id = _id, document = doc_plus)
+            self.logger.info("search update succeded: %s", es_res)
+        except Exception as e:
+            self.logger.error("search update failed: %s", body_plus)
+            self.logger.exception(e)
 
 if __name__ == '__main__':
     faulthandler.enable()

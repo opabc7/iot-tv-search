@@ -12,6 +12,8 @@ from vod.vod_title_extractor import TitleExtractor
 from vod.vod_added_dataloader import VodAddedDataloader
 from vod import vod_heat_gererator
 from vod import vod_datadict
+from elasticsearch import Elasticsearch
+from mappings import vod_album_mapping
 
 featureType_pattern1 = r"花絮|精彩集锦|片段|彩蛋|预告|排行|首映礼|精彩看点|纪录片|特别纪录|混剪|名场面|周诌大电影"
 featureType_pattern2 = r"幕后"
@@ -34,6 +36,13 @@ class AlbumHandler(VodHandler):
         self.ghost_tags_map = added_dataloader.get_ghost_tags_map()
         self.douban_map = added_dataloader.get_douban_map()
         self.field_merge_map = added_dataloader.get_field_merge_map()
+
+        self.es = Elasticsearch(self.es_hosts)
+        if self.es.indices.exists(index = self.index_name):
+            self.logger.info("search index %s has already existed.", self.index_name)
+        else:
+            es_res = self.es.indices.create(index = self.index_name, mappings = vod_album_mapping.mappings)
+            self.logger.info("search index created, result: %s", es_res)
 
     def init_config_task(self):
         task_config = VodHandler.init_config_task(self)
@@ -159,6 +168,17 @@ class AlbumHandler(VodHandler):
         self.gen_douban_data(sid, doc_plus)
 
         return doc_plus
+
+    def write_plus(self, _id, title, body_plus, doc_plus):
+        self.rocksclient.put(_id, body_plus)
+        self.logger.info('rocks put - %s', body_plus)
+
+        try:
+            es_res = self.es.index(index = self.index_name, id = _id, document = doc_plus)
+            self.logger.info("search update succeded: %s", es_res)
+        except Exception as e:
+            self.logger.error("search update failed: %s", body_plus)
+            self.logger.exception(e)
 
     def convert_showtime(self, sid, showtime):
         try:

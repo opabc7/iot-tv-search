@@ -48,6 +48,9 @@ class VodHandler:
         self.db_database = config['db']['db_database']
         self.db_charset = config['db']['db_charset']
 
+        # config:es
+        self.es_hosts = config['es']['es_hosts']
+
         # config:mq
         self.mq_addr = config['mq']['mq_addr']
 
