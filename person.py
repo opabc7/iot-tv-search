@@ -20,7 +20,7 @@ class PersonHandler(VodHandler):
         if self.es.indices.exists(index = self.index_name):
             self.logger.info("search index %s has already existed.", self.index_name)
         else:
-            es_res = self.es.indices.create(index = self.index_name, mappings = vod_person_mapping.mappings)
+            es_res = self.es.indices.create(index = self.index_name, body = vod_person_mapping.mappings)
             self.logger.info("search index created, result: %s", es_res)
 
     def init_config_task(self):
@@ -102,7 +102,7 @@ class PersonHandler(VodHandler):
         self.logger.info('rocks put - %s', body_plus)
 
         try:
-            es_res = self.es.index(index = self.index_name, id = _id, document = doc_plus)
+            es_res = self.es.index(index = self.index_name, id = _id, body = doc_plus)
             self.logger.info("search update succeded: %s", es_res)
         except Exception as e:
             self.logger.error("search update failed: %s", body_plus)
