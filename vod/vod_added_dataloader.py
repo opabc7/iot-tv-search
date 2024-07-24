@@ -127,7 +127,8 @@ class VodAddedDataloader:
 
                     douban_map[sid] = (tags, comment_cnt, score, hot)
                 except Exception as e:
-                    self.logger.exception(line, e)
+                    self.logger.error("added_data douban_map failed: %s", line)
+                    self.logger.exception(e)
 
         self.logger.info('added_data loaded - douban_map - %s', len(douban_map))
         return douban_map
