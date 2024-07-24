@@ -36,13 +36,13 @@ class AlbumHandler(VodHandler):
             self.logger.info("search index created, result: %s", es_res)
 
         added_dataloader = VodAddedDataloader(self.logger, self.added_data_config)
+        self.field_merge_map = added_dataloader.get_field_merge_map()
         self.series_map = added_dataloader.get_sereis_map()
         self.featuretype_map = added_dataloader.get_featuretype_map()
         self.title_digit_norm_map = added_dataloader.get_title_digit_norm_map()
         self.baidu_tags_map = added_dataloader.get_baidu_tags_map()
         self.ghost_tags_map = added_dataloader.get_ghost_tags_map()
         self.douban_map = added_dataloader.get_douban_map()
-        self.field_merge_map = added_dataloader.get_field_merge_map()
 
     def init_config_task(self):
         task_config = VodHandler.init_config_task(self)
