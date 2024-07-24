@@ -28,6 +28,13 @@ class AlbumHandler(VodHandler):
         self.rocksclient_heat = RocksClient(self.rocksdb_path_heat)
         self.rocksclient_virtual_program = RocksClient(self.rocksdb_path_virtual_program)
 
+        self.es = Elasticsearch(self.es_hosts)
+        if self.es.indices.exists(index = self.index_name):
+            self.logger.info("search index %s has already existed.", self.index_name)
+        else:
+            es_res = self.es.indices.create(index = self.index_name, body = vod_album_mapping.mappings)
+            self.logger.info("search index created, result: %s", es_res)
+
         added_dataloader = VodAddedDataloader(self.logger, self.added_data_config)
         self.series_map = added_dataloader.get_sereis_map()
         self.featuretype_map = added_dataloader.get_featuretype_map()
@@ -36,13 +43,6 @@ class AlbumHandler(VodHandler):
         self.ghost_tags_map = added_dataloader.get_ghost_tags_map()
         self.douban_map = added_dataloader.get_douban_map()
         self.field_merge_map = added_dataloader.get_field_merge_map()
-
-        self.es = Elasticsearch(self.es_hosts)
-        if self.es.indices.exists(index = self.index_name):
-            self.logger.info("search index %s has already existed.", self.index_name)
-        else:
-            es_res = self.es.indices.create(index = self.index_name, body = vod_album_mapping.mappings)
-            self.logger.info("search index created, result: %s", es_res)
 
     def init_config_task(self):
         task_config = VodHandler.init_config_task(self)
