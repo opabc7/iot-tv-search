@@ -173,9 +173,6 @@ class AlbumHandler(VodHandler):
         return doc_plus
 
     def write_plus(self, _id, title, body_plus, doc_plus):
-        self.rocksclient.put(_id, body_plus)
-        self.logger.info('rocks put - %s', body_plus)
-
         try:
             es_res = self.es.index(index = self.index_name, id = _id, body = doc_plus)
             self.logger.info("search update succeded: %s", es_res)
