@@ -388,10 +388,11 @@ class AlbumHandler(VodHandler):
             if hasBigger:
                 doc['status'] = -1
                 doc['virtual_status'] = 0
+
+                self.logger.info('gen virtual - %s - %s', sid, 'inactive')
             else:
                 doc['virtual_status'] = 1
-
-            self.logger.info('gen virtual - %s - %s', sid, doc['virtual_status'])
+                self.logger.info('gen virtual - %s - %s', sid, 'active')
         except Exception as e:
             self.logger.error('gen virtual failed - %s', virtual_info_str)
             self.logger.exception(e)
@@ -577,29 +578,32 @@ class AlbumHandler(VodHandler):
                 merge_tags = jsonutils.get_value_with_default(field_merge_info, "merge_tags", list)
                 if len(merge_tags):
                     doc['merge_tags'] = " | ".join(merge_tags)
+                    self.logger.info('gen merge_tags - %s - %s', sid, doc['merge_tags'])
 
                 merge_area = jsonutils.get_value_with_default(field_merge_info, "merge_area", list)
                 if len(merge_area):
                     doc['merge_area'] = merge_area
+                    self.logger.info('gen merge_area - %s - %s', sid, doc['merge_area'])
 
                 merge_personsName = jsonutils.get_value_with_default(field_merge_info, "merge_personsName", list)
                 if len(merge_personsName):
                     doc['merge_personsName'] = " | ".join(merge_personsName)
+                    self.logger.info('gen merge_personsName - %s - %s', sid, doc['merge_personsName'])
 
                 merge_language = jsonutils.get_value_with_default(field_merge_info, "merge_language", list)
                 if len(merge_language):
                     doc['merge_language'] = " | ".join(merge_language)
+                    self.logger.info('gen merge_language - %s - %s', sid, doc['merge_language'])
 
                 merge_contentType_mapping = jsonutils.get_value_with_default(field_merge_info, "merge_contentType_mapping", list)
                 if len(merge_contentType_mapping):
                     doc['merge_contentType_mapping'] = " | ".join(merge_contentType_mapping)
+                    self.logger.info('gen merge_contentType_mapping - %s - %s', sid, doc['merge_contentType_mapping'])
 
                 merge_year = jsonutils.get_value_with_default(field_merge_info, "merge_year", list)
                 if len(merge_year):
                     doc['merge_year'] = merge_year
-
-            self.logger.info('gen field_merge - %s - %s - %s - %s - %s - %s - %s', sid, doc['merge_tags'], doc['merge_area'],
-                             doc['merge_personsName'], doc['merge_language'], doc['merge_contentType_mapping'], doc['merge_year'])
+                    self.logger.info('gen merge_year - %s - %s', sid, doc['merge_year'])
         except Exception as e:
             self.logger.error('gen field_merge failed - %s', sid)
             self.logger.exception(e)
