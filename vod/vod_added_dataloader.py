@@ -4,10 +4,11 @@ import os
 import json
 from lib.utils import jsonutils
 from . import vod_datadict
+import logging
 
 class VodAddedDataloader:
 
-    def __init__(self, logger, config):
+    def __init__(self, logger: logging.Logger, config):
         self.logger = logger
 
         self.path_series_map = os.path.join(config['root'], config['series_map'])
@@ -126,7 +127,7 @@ class VodAddedDataloader:
 
                     douban_map[sid] = (tags, comment_cnt, score, hot)
                 except Exception as e:
-                    print(e)
+                    self.logger.exception(e)
 
         self.logger.info('added_data loaded - douban_map - %s', len(douban_map))
         return douban_map
@@ -188,7 +189,7 @@ class VodAddedDataloader:
                     "merge_language": list(set(merge_language))
                 }
             except Exception as e:
-                continue
+                self.logger.exception(e)
 
         self.logger.info('added_data loaded - field_merge_map - %s', len(sid_merge_info_dict))
         return sid_merge_info_dict
@@ -214,7 +215,7 @@ class VodAddedDataloader:
                         else:
                             vt_sid_dict[sid] = sid_list
                 except Exception as e:
-                    continue
+                    self.logger.exception(e)
 
         # sort uniq
         for sid, vt_sid_list in vt_sid_dict.items():
@@ -247,7 +248,9 @@ class VodAddedDataloader:
                         "year": jsonutils.get_value_with_default(data, "year", int),
                         "language": jsonutils.get_value_with_default(data, "language", str).strip()
                     }
+
+                    self.logger.info('added_data loaded - album - %s', sid)
                 except Exception as e:
-                    continue
+                    self.logger.exception(e)
 
         return album_dict

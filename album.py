@@ -47,6 +47,9 @@ class AlbumHandler(VodHandler):
     def init_config_task(self):
         task_config = VodHandler.init_config_task(self)
 
+        # config:task:es
+        self.index_name = task_config['es']['index_name']
+
         # config:task:rocksdb
         self.rocksdb_path_heat = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[task_config['rocksdb']['heat']])
         self.rocksdb_path_virtual_program = os.path.join(self.rocksdb_config['root'], self.rocksdb_config[task_config['rocksdb']['virtual_program']])
