@@ -175,7 +175,7 @@ class AlbumHandler(VodHandler):
     def write_plus(self, _id, title, body_plus, doc_plus):
         try:
             es_res = self.es.index(index = self.index_name, id = _id, body = doc_plus)
-            self.logger.info("search update succeded: %s", es_res)
+            self.logger.info("search update succeded: %s %s", _id, es_res)
         except Exception as e:
             self.logger.error("search update failed: %s", body_plus)
             self.logger.exception(e)
@@ -743,7 +743,7 @@ class AlbumHandler(VodHandler):
             doc["douban_comment_cnt"] = douban_comment_cnt
             doc["douban_score"] = douban_score
             doc["douban_hot"] = douban_hot
-            self.logger.info('gen douban_data - %s - %s', sid, douban_tags, douban_comment_cnt, douban_score, douban_hot)
+            self.logger.info('gen douban_data - %s - %s - %s - %s - %s', sid, douban_tags, douban_comment_cnt, douban_score, douban_hot)
         except Exception as e:
             self.logger.error('gen douban_data failed - %s', sid)
             self.logger.exception(e)
