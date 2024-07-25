@@ -43,22 +43,37 @@ if __name__ == '__main__':
     db_connection = pymysql.connect(host = db_host, port = db_port, user = db_user,
                                     password = db_password, database = db_database, charset = db_charset)
 
+    all, new = 0, 0
     docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(100)
     for doc in docs:
+        all += 1
+
         _id = doc['sid']
         title = doc['title']
         body = json.dumps(trans_mongo_doc_to_es(doc))
+        print('mongo - ', all, _id, title)
 
-        print('mongo', _id, title)
-
-    offset = 0
-    while True:
         with db_connection.cursor() as db_cursor:
-            sum = db_cursor.execute(doc_sql_find, (offset, ))
-            if sum:
-                for _id, title, body_plus in db_cursor.fetchall():
-                    print('mysql', _id, title)
-            else:
-                break
+            existed = db_cursor.execute(doc_sql_get, (_id, ))
 
-            offset += 10
+        _time = int(time.time() * 1000)
+        with db_connection.cursor() as db_cursor:
+            if not existed:
+                new += 1
+
+                db_cursor.execute(doc_sql_insert, (_id, body, _time))
+                print('db insert - %s - %s - %s', new, _id, title)
+
+        db_connection.commit()
+
+    #offset = 0
+    #while True:
+    #    with db_connection.cursor() as db_cursor:
+    #        sum = db_cursor.execute(doc_sql_find, (offset, ))
+    #        if sum:
+    #            for _id, title, body_plus in db_cursor.fetchall():
+    #                print('mysql', _id, title)
+    #        else:
+    #            break
+#
+    #        offset += 10
