@@ -20,7 +20,7 @@ db_charset = 'utf8mb4'
 doc_sql_get = 'select id from album where id = %s'
 doc_sql_insert = 'insert into album(id, body, create_time) values (%s, %s, %s)'
 
-doc_sql_find = 'select id, title, body_plus from album limit %s, 100'
+doc_sql_find = 'select id, body_plus from album limit %s, 100'
 doc_sql_update = 'update album set body_plus = %s, update_time = %s where id = %s'
 
 def trans_mongo_doc_to_es(doc):
@@ -73,9 +73,9 @@ if __name__ == '__main__':
             results = db_cursor.fetchall()
 
         if results:
-            for _id, title, body_plus in results:
+            for _id, body_plus in results:
                     if not body_plus:
-                        print('mysql - ', offset, _id, title)
+                        print('mysql - ', offset, _id)
         else:
             break
 
