@@ -55,7 +55,7 @@ if __name__ == '__main__':
         with db_connection.cursor() as db_cursor:
             existed = db_cursor.execute(doc_sql_findone, (_id, ))
 
-            last_update_time = db_cursor.fetchone()
+            (last_update_time,) = db_cursor.fetchone()
             if not last_update_time:
                 last_update_time = 0
 
