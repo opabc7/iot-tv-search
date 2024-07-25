@@ -76,7 +76,7 @@ if __name__ == '__main__':
             for _id, body_plus in results:
                     if not body_plus:
                         print('mysql -', offset, _id)
-                        doc = mongo[mongo_db_name][mongo_table_name_plus].find_one({_id : _id})
+                        doc = mongo[mongo_db_name][mongo_table_name_plus].find_one({_id : str(_id)})
 
                         if doc:
                             print('mongo -', _id, doc['title'])
