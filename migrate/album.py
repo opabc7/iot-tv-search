@@ -51,7 +51,7 @@ if __name__ == '__main__':
     #    _id = doc['sid']
     #    title = doc['title']
     #    body = json.dumps(trans_mongo_doc_to_es(doc))
-    #    print('mongo - ', all, _id, title)
+    #    print('mongo -', all, _id, title)
 
     #    with db_connection.cursor() as db_cursor:
     #        existed = db_cursor.execute(doc_sql_get, (_id, ))
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     #            new += 1
 
     #            db_cursor.execute(doc_sql_insert, (_id, body, _time))
-    #            print('db insert - ', new, _id, title)
+    #            print('db insert -', new, _id, title)
 
     #    db_connection.commit()
 
@@ -75,7 +75,18 @@ if __name__ == '__main__':
         if results:
             for _id, body_plus in results:
                     if not body_plus:
-                        print('mysql - ', offset, _id)
+                        print('mysql -', offset, _id)
+                        doc = mongo[mongo_db_name][mongo_table_name_plus].find_one({'_id' : _id})
+
+                        if doc:
+                            body = json.dumps(trans_mongo_doc_to_es(doc))
+
+                            _time = int(time.time() * 1000)
+                            with db_connection.cursor() as db_cursor:
+                                db_cursor.execute(doc_sql_update, (_id, body, _time))
+                                print('db update -', _id)
+
+                            db_connection.commit()
         else:
             break
 
