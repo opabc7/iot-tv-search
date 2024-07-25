@@ -76,14 +76,15 @@ if __name__ == '__main__':
             for _id, body_plus in results:
                     if not body_plus:
                         print('mysql -', offset, _id)
-                        doc = mongo[mongo_db_name][mongo_table_name_plus].find_one({'_id' : _id})
+                        doc = mongo[mongo_db_name][mongo_table_name_plus].find_one({_id : _id})
 
                         if doc:
+                            print('mongo -', _id, doc['title'])
                             body = json.dumps(trans_mongo_doc_to_es(doc))
 
                             _time = int(time.time() * 1000)
                             with db_connection.cursor() as db_cursor:
-                                db_cursor.execute(doc_sql_update, (_id, body, _time))
+                                db_cursor.execute(doc_sql_update, (body, _time, _id))
                                 print('db update -', _id)
 
                             db_connection.commit()
