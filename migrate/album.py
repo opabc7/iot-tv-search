@@ -17,11 +17,9 @@ db_password = 'fRWKIpgUSgX5S_r-lQuZS0xJ0HStct_7r0VTOyB2-SbAQReIeOgCQYmRubXaDhaR'
 db_database = 'cnvod'
 db_charset = 'utf8mb4'
 
-doc_sql_get = 'select id from album where id = %s'
-doc_sql_insert = 'insert into album(id, body, create_time) values (%s, %s, %s)'
-
-doc_sql_find = 'select id, body_plus from album limit %s, 100'
-doc_sql_update = 'update album set body_plus = %s, update_time = %s where id = %s'
+doc_sql_findone = 'select update_time from album where id = %s'
+doc_sql_insert_body = 'insert into album(id, body, create_time) values (%s, %s, %s)'
+doc_sql_update_body_plus = 'update album set body_plus = %s, update_time = %s where id = %s'
 
 def trans_mongo_doc_to_es(doc):
     for k, v in doc.copy().items():
@@ -38,57 +36,44 @@ def trans_mongo_doc_to_es(doc):
     return doc
 
 if __name__ == '__main__':
-    mongo = MongoClient(mongo_conf)
+    migrate_time = int(time.time() * 1000)
 
+    mongo = MongoClient(mongo_conf)
     db_connection = pymysql.connect(host = db_host, port = db_port, user = db_user,
                                     password = db_password, database = db_database, charset = db_charset)
 
-    #all, new = 0, 0
-    #docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(100)
-    #for doc in docs:
-    #    all += 1
-#
-    #    _id = doc['sid']
-    #    title = doc['title']
-    #    body = json.dumps(trans_mongo_doc_to_es(doc))
-    #    print('mongo -', all, _id, title)
+    all, insert, update = 0, 0, 0
+    docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(100)
+    for doc in docs:
+        all += 1
 
-    #    with db_connection.cursor() as db_cursor:
-    #        existed = db_cursor.execute(doc_sql_get, (_id, ))
+        _id = doc['sid']
+        title = doc['title']
+        body = json.dumps(trans_mongo_doc_to_es(doc))
+        print('mongo -', all, _id, title)
 
-    #    _time = int(time.time() * 1000)
-    #    with db_connection.cursor() as db_cursor:
-    #        if not existed:
-    #            new += 1
-
-    #            db_cursor.execute(doc_sql_insert, (_id, body, _time))
-    #            print('db insert -', new, _id, title)
-
-    #    db_connection.commit()
-
-    offset = 0
-    while True:
         with db_connection.cursor() as db_cursor:
-            db_cursor.execute(doc_sql_find, (offset, ))
-            results = db_cursor.fetchall()
+            existed = db_cursor.execute(doc_sql_findone, (_id, ))
 
-        if results:
-            for _id, body_plus in results:
-                    if not body_plus:
-                        print('mysql -', offset, _id)
-                        doc = mongo[mongo_db_name][mongo_table_name_plus].find_one({'_id' : str(_id)})
+            last_update_time = db_cursor.fetchone()
+            if not last_update_time:
+                last_update_time = 0
 
-                        if doc:
-                            print('mongo -', _id, doc['title'])
-                            body = json.dumps(trans_mongo_doc_to_es(doc))
+        _time = int(time.time() * 1000)
+        with db_connection.cursor() as db_cursor:
+            if existed:
+                if last_update_time < migrate_time:
+                    doc_plus = mongo[mongo_db_name][mongo_table_name_plus].find_one({'_id' : _id})
+                    body_plus = json.dumps(trans_mongo_doc_to_es(doc_plus))
 
-                            _time = int(time.time() * 1000)
-                            with db_connection.cursor() as db_cursor:
-                                db_cursor.execute(doc_sql_update, (body, _time, _id))
-                                print('db update -', _id)
+                    db_cursor.execute(doc_sql_update_body_plus, (body_plus, _time, _id))
 
-                            db_connection.commit()
-        else:
-            break
+                    update += 1
+                    print('db update -', update, _id, title)
+            else:
+                db_cursor.execute(doc_sql_insert_body, (_id, body, _time))
 
-        offset += 10
+                insert += 1
+                print('db insert -', insert, _id, title)
+
+        db_connection.commit()
