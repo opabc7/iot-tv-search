@@ -23,7 +23,7 @@ doc_sql_insert = 'insert into album(id, body, create_time) values (%s, %s, %s)'
 doc_sql_find = 'select id, title, body_plus from album where limit %s, 100'
 doc_sql_update = 'update album set body_plus = %s, update_time = %s where id = %s'
 
-def trans_mongo_doc_to_es(self, doc):
+def trans_mongo_doc_to_es(doc):
     for k, v in doc.items():
         if '__' in k:
             new_k = k.replace('__', '.')
