@@ -43,37 +43,40 @@ if __name__ == '__main__':
     db_connection = pymysql.connect(host = db_host, port = db_port, user = db_user,
                                     password = db_password, database = db_database, charset = db_charset)
 
-    all, new = 0, 0
-    docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(100)
-    for doc in docs:
-        all += 1
-
-        _id = doc['sid']
-        title = doc['title']
-        body = json.dumps(trans_mongo_doc_to_es(doc))
-        print('mongo - ', all, _id, title)
-
-        with db_connection.cursor() as db_cursor:
-            existed = db_cursor.execute(doc_sql_get, (_id, ))
-
-        _time = int(time.time() * 1000)
-        with db_connection.cursor() as db_cursor:
-            if not existed:
-                new += 1
-
-                db_cursor.execute(doc_sql_insert, (_id, body, _time))
-                print('db insert - %s - %s - %s', new, _id, title)
-
-        db_connection.commit()
-
-    #offset = 0
-    #while True:
-    #    with db_connection.cursor() as db_cursor:
-    #        sum = db_cursor.execute(doc_sql_find, (offset, ))
-    #        if sum:
-    #            for _id, title, body_plus in db_cursor.fetchall():
-    #                print('mysql', _id, title)
-    #        else:
-    #            break
+    #all, new = 0, 0
+    #docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(100)
+    #for doc in docs:
+    #    all += 1
 #
-    #        offset += 10
+    #    _id = doc['sid']
+    #    title = doc['title']
+    #    body = json.dumps(trans_mongo_doc_to_es(doc))
+    #    print('mongo - ', all, _id, title)
+
+    #    with db_connection.cursor() as db_cursor:
+    #        existed = db_cursor.execute(doc_sql_get, (_id, ))
+
+    #    _time = int(time.time() * 1000)
+    #    with db_connection.cursor() as db_cursor:
+    #        if not existed:
+    #            new += 1
+
+    #            db_cursor.execute(doc_sql_insert, (_id, body, _time))
+    #            print('db insert - ', new, _id, title)
+
+    #    db_connection.commit()
+
+    offset = 0
+    while True:
+        with db_connection.cursor() as db_cursor:
+            db_cursor.execute(doc_sql_find, (offset, ))
+            results = db_cursor.fetchall()
+
+        if results:
+            for _id, title, body_plus in results:
+                    if not body_plus:
+                        print('mysql - ', offset, _id, title)
+        else:
+            break
+
+        offset += 10
