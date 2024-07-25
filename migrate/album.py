@@ -24,7 +24,7 @@ doc_sql_find = 'select id, title, body_plus from album where limit %s, 100'
 doc_sql_update = 'update album set body_plus = %s, update_time = %s where id = %s'
 
 def trans_mongo_doc_to_es(doc):
-    for k, v in doc.items():
+    for k, v in doc.copy().items():
         if '__' in k:
             new_k = k.replace('__', '.')
 
