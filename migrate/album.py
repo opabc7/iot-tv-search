@@ -20,8 +20,22 @@ db_charset = 'utf8mb4'
 doc_sql_get = 'select id from album where id = %s'
 doc_sql_insert = 'insert into album(id, body, create_time) values (%s, %s, %s)'
 
-doc_sql_find = 'select id, title, body_plus from album where limit %s,10'
+doc_sql_find = 'select id, title, body_plus from album where limit %s, 100'
 doc_sql_update = 'update album set body_plus = %s, update_time = %s where id = %s'
+
+def trans_mongo_doc_to_es(self, doc):
+    for k, v in doc.items():
+        if '__' in k:
+            new_k = k.replace('__', '.')
+
+            doc[new_k] = v
+
+            del doc[k]
+
+        if k == '_id':
+            del doc[k]
+
+    return doc
 
 if __name__ == '__main__':
     mongo = MongoClient(mongo_conf)
@@ -29,11 +43,11 @@ if __name__ == '__main__':
     db_connection = pymysql.connect(host = db_host, port = db_port, user = db_user,
                                     password = db_password, database = db_database, charset = db_charset)
 
-    docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(10000)
+    docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(100)
     for doc in docs:
         _id = doc['sid']
         title = doc['title']
-        body = json.dumps(doc)
+        body = json.dumps(trans_mongo_doc_to_es(doc))
 
         print('mongo', _id, title)
 
