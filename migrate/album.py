@@ -29,7 +29,7 @@ if __name__ == '__main__':
     db_connection = pymysql.connect(host = db_host, port = db_port, user = db_user,
                                     password = db_password, database = db_database, charset = db_charset)
 
-    docs = mongo.find(mongo_db_name, mongo_table_name)
+    docs = mongo[mongo_db_name][mongo_table_name].find({}).batch_size(10000)
     for doc in docs:
         _id = doc['sid']
         title = doc['title']
